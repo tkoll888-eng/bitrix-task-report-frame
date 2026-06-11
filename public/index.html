@@ -11,14 +11,25 @@
       <section class="report-shell">
         <div class="toolbar">
           <form class="filters" aria-label="Фильтры отчета">
-            <label class="filter-field">
-              <span>Период</span>
-              <select>
-                <option>Март 2024</option>
-                <option>Апрель 2024</option>
-                <option>Май 2024</option>
-              </select>
-            </label>
+            <div class="filter-group" data-filter-group="period">
+              <label class="filter-field">
+                <span class="filter-caption-row">
+                  <span>Период</span>
+                  <span class="range-inline" data-range-inline="period"></span>
+                </span>
+                <select data-range-toggle="period">
+                  <option value="currentMonth" selected>Текущий месяц</option>
+                  <option value="currentWeek">Текущая неделя</option>
+                  <option value="today">Сегодня</option>
+                  <option value="custom">Произвольный период</option>
+                </select>
+              </label>
+              <div class="range-picker" data-range-picker="period" hidden>
+                <input type="date" data-range-start="period" aria-label="Начало периода">
+                <span class="range-separator">—</span>
+                <input type="date" data-range-end="period" aria-label="Окончание периода">
+              </div>
+            </div>
 
             <label class="filter-field">
               <span>Теги содержит</span>
@@ -28,15 +39,25 @@
               </div>
             </label>
 
-            <label class="filter-field">
-              <span>Дата завершения</span>
-              <select>
-                <option>Все</option>
-                <option>Сегодня</option>
-                <option>Неделя</option>
-                <option>Месяц</option>
-              </select>
-            </label>
+            <div class="filter-group" data-filter-group="completion">
+              <label class="filter-field">
+                <span class="filter-caption-row">
+                  <span>Дата завершения</span>
+                  <span class="range-inline" data-range-inline="completion"></span>
+                </span>
+                <select data-range-toggle="completion">
+                  <option value="currentMonth" selected>Текущий месяц</option>
+                  <option value="currentWeek">Текущая неделя</option>
+                  <option value="today">Сегодня</option>
+                  <option value="custom">Произвольный период</option>
+                </select>
+              </label>
+              <div class="range-picker" data-range-picker="completion" hidden>
+                <input type="date" data-range-start="completion" aria-label="Начало даты завершения">
+                <span class="range-separator">—</span>
+                <input type="date" data-range-end="completion" aria-label="Окончание даты завершения">
+              </div>
+            </div>
 
             <label class="filter-field">
               <span>Статус</span>
@@ -81,7 +102,8 @@
             <strong id="spent-total">0:00</strong>
           </div>
           <div class="totals-count">
-            <span>Задач: <strong id="task-count">0</strong></span>
+            <span>Количество задач</span>
+            <strong id="task-count">0</strong>
           </div>
         </section>
       </section>

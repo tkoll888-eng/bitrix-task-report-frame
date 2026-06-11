@@ -77,23 +77,38 @@ The technical field code is not known yet. During implementation, it must be fou
 
 The compact top filter row contains:
 
-- `Отчет за период`
+- `Период`
 - `Теги содержит`
 - `Дата завершения`
 - `Статус`
 
 The first release uses an always-visible compact filter row. Separate `Apply` and `Reset` buttons are not required in the visual layout unless they become necessary later for real interaction behavior.
 
-### Report Period
+### Period
 
-`Отчет за период` filters by task activity.
+`Период` filters by task activity.
 A task is included when it was created or changed inside the selected period:
 
 ```text
 createdDate within period OR changedDate within period
 ```
 
-The default period is the current calendar month.
+The default value is `Текущий месяц`.
+
+`Период` supports these modes:
+
+- `Текущий месяц`
+- `Текущая неделя`
+- `Сегодня`
+- `Произвольный период`
+
+Range logic is always calculated relative to the user's current local date at the moment of use:
+
+- `Текущий месяц` = from the first day of the current month to the last day of the current month.
+- `Текущая неделя` = from Monday of the current week to Sunday of the current week.
+- `Сегодня` = the current date only.
+
+When `Произвольный период` is selected, the UI shows a calendar-based date-range control using native browser date inputs. Visually this is one period-selection block, not part of the quick preset flow.
 
 ### Tags
 
@@ -101,12 +116,20 @@ The default period is the current calendar month.
 
 ### Completion Date
 
+`Дата завершения` uses the same interaction pattern as `Период`.
+
+The default value is `Текущий месяц`.
+
 `Дата завершения` supports:
 
+- `Текущий месяц`
+- `Текущая неделя`
 - `Сегодня`
-- `Неделя`
-- `Месяц`
-- Manual date range
+- `Произвольный период`
+
+Range logic is also calculated relative to the user's current local date at the moment of use. For quick presets, the upper boundary closes at the end of the selected calendar period.
+
+When `Произвольный период` is selected, the UI shows the same calendar-based date-range control using native browser date inputs.
 
 ### Status
 

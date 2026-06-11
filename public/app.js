@@ -150,6 +150,83 @@ function createStatus(status, tone) {
   return wrap;
 }
 
+function toDateOnly(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function toDisplayDate(value) {
+  if (!value) {
+    return '';
+  }
+
+  const [year, month, day] = String(value).split('-');
+  if (!year || !month || !day) {
+    return value;
+  }
+
+  return `${day}.${month}.${year}`;
+}
+
+function getPresetRange(preset, now) {
+  if (preset === 'today') {
+    const today = toDateOnly(now);
+    return { from: today, to: today };
+  }
+
+  if (preset === 'currentWeek') {
+    const day = now.getDay() || 7;
+    const from = new Date(now);
+    from.setDate(now.getDate() - day + 1);
+    const to = new Date(from);
+    to.setDate(from.getDate() + 6);
+    return { from: toDateOnly(from), to: toDateOnly(to) };
+  }
+
+  const from = new Date(now.getFullYear(), now.getMonth(), 1);
+  const to = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+  return { from: toDateOnly(from), to: toDateOnly(to) };
+}
+
+function formatRangeText(from, to) {
+  if (!from || !to) {
+    return 'Выберите даты';
+  }
+
+  return `${toDisplayDate(from)} - ${toDisplayDate(to)}`;
+}
+
+function syncRangeSummary(key, now) {
+  const control = document.querySelector(`[data-range-toggle="${key}"]`);
+  const summary = document.querySelector(`[data-range-summary="${key}"]`);
+  const inline = document.querySelector(`[data-range-inline="${key}"]`);
+  const start = document.querySelector(`[data-range-start="${key}"]`);
+  const end = document.querySelector(`[data-range-end="${key}"]`);
+
+  if (!control) {
+    return;
+  }
+
+  const setText = (text) => {
+    if (summary) {
+      summary.textContent = text;
+    }
+    if (inline) {
+      inline.textContent = text;
+    }
+  };
+
+  if (control.value === 'custom') {
+    setText(formatRangeText(start?.value, end?.value));
+    return;
+  }
+
+  const range = getPresetRange(control.value, now);
+  setText(formatRangeText(range.from, range.to));
+}
+
 function renderPreview(report) {
   document.getElementById('planned-total').textContent = report.plannedTotal;
   document.getElementById('spent-total').textContent = report.spentTotal;
@@ -212,4 +289,30 @@ function renderPreview(report) {
   }
 }
 
+function bindRangePickers() {
+  const controls = document.querySelectorAll('[data-range-toggle]');
+  const now = new Date();
+
+  for (const control of controls) {
+    const key = control.getAttribute('data-range-toggle');
+    const picker = document.querySelector(`[data-range-picker="${key}"]`);
+    const start = document.querySelector(`[data-range-start="${key}"]`);
+    const end = document.querySelector(`[data-range-end="${key}"]`);
+    if (!picker) {
+      continue;
+    }
+
+    const sync = () => {
+      picker.hidden = control.value !== 'custom';
+      syncRangeSummary(key, now);
+    };
+
+    control.addEventListener('change', sync);
+    start?.addEventListener('input', () => syncRangeSummary(key, now));
+    end?.addEventListener('input', () => syncRangeSummary(key, now));
+    sync();
+  }
+}
+
 renderPreview(previewReport);
+bindRangePickers();
