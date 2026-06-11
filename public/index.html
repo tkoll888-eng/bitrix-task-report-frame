@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Отчет по задачам</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <main class="page">
+      <header class="hero">
+        <div>
+          <p class="eyebrow">Bitrix24 Task Report</p>
+          <h1>Отчет по задачам</h1>
+          <p class="subtitle">Ранний просмотр структуры отчета для согласования интерфейса.</p>
+        </div>
+        <button type="button" class="print-button">Печать</button>
+      </header>
+
+      <section class="summary-card">
+        <div>
+          <span class="summary-label">Объект</span>
+          <strong id="object-name">Загрузка...</strong>
+        </div>
+        <div>
+          <span class="summary-label">Компания</span>
+          <strong id="company-name">Загрузка...</strong>
+        </div>
+        <div>
+          <span class="summary-label">Период</span>
+          <strong id="period-name">Период</strong>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">
+          <h2>Фильтры</h2>
+        </div>
+
+        <form class="filters" aria-label="Фильтры отчета">
+          <label>
+            <span>Период</span>
+            <select>
+              <option>Текущий месяц</option>
+              <option>Прошлый месяц</option>
+              <option>Произвольный диапазон</option>
+            </select>
+          </label>
+
+          <label>
+            <span>Теги содержит</span>
+            <input type="text" placeholder="Например, монтаж">
+          </label>
+
+          <label>
+            <span>Дата завершения</span>
+            <select>
+              <option>Месяц</option>
+              <option>Сегодня</option>
+              <option>Неделя</option>
+            </select>
+          </label>
+
+          <label>
+            <span>Статус</span>
+            <select>
+              <option>В работе</option>
+              <option>Ждет контроля</option>
+              <option>Завершена</option>
+            </select>
+          </label>
+        </form>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">
+          <h2>Задачи</h2>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Дата создания</th>
+                <th>Статус</th>
+                <th>Название</th>
+                <th>План</th>
+                <th>Факт</th>
+                <th>Дата завершения</th>
+                <th>Крайний срок</th>
+                <th>Наименование позиции</th>
+                <th>Теги</th>
+              </tr>
+            </thead>
+            <tbody id="report-rows"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="totals">
+        <article class="total-card">
+          <span>Плановые трудозатраты</span>
+          <strong id="planned-total">0:00</strong>
+        </article>
+        <article class="total-card">
+          <span>Затраченное время</span>
+          <strong id="spent-total">0:00</strong>
+        </article>
+      </section>
+    </main>
+
+    <script src="/app.js"></script>
+  </body>
+</html>

@@ -1,0 +1,23 @@
+{
+  "name": "bitrix-task-report-frame",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Bitrix24 smart-process task report frame",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "test": "node --test",
+    "discover": "node scripts/discover.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2"
+  },
+  "devDependencies": {
+    "supertest": "^7.0.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
