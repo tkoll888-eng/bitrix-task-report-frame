@@ -9,6 +9,8 @@
   <body>
     <main class="page">
       <section class="report-shell">
+        <div id="message" class="message" hidden></div>
+
         <div class="toolbar">
           <form class="filters" aria-label="Фильтры отчета">
             <div class="filter-group" data-filter-group="period">
@@ -17,7 +19,7 @@
                   <span>Период</span>
                   <span class="range-inline" data-range-inline="period"></span>
                 </span>
-                <select data-range-toggle="period">
+                <select id="periodPreset" data-range-toggle="period">
                   <option value="currentMonth" selected>Текущий месяц</option>
                   <option value="currentWeek">Текущая неделя</option>
                   <option value="today">Сегодня</option>
@@ -26,7 +28,7 @@
               </label>
               <div class="range-picker" data-range-picker="period" hidden>
                 <input type="date" data-range-start="period" aria-label="Начало периода">
-                <span class="range-separator">—</span>
+                <span class="range-separator">-</span>
                 <input type="date" data-range-end="period" aria-label="Окончание периода">
               </div>
             </div>
@@ -34,8 +36,8 @@
             <label class="filter-field">
               <span>Теги содержит</span>
               <div class="tag-input">
-                <span class="tag-input-icon">⌂</span>
-                <input type="text" value="Любой тег">
+                <span class="tag-input-icon">#</span>
+                <input id="tagContains" type="text" placeholder="Любой тег">
               </div>
             </label>
 
@@ -45,7 +47,7 @@
                   <span>Дата завершения</span>
                   <span class="range-inline" data-range-inline="completion"></span>
                 </span>
-                <select data-range-toggle="completion">
+                <select id="completionPreset" data-range-toggle="completion">
                   <option value="currentMonth" selected>Текущий месяц</option>
                   <option value="currentWeek">Текущая неделя</option>
                   <option value="today">Сегодня</option>
@@ -54,23 +56,24 @@
               </label>
               <div class="range-picker" data-range-picker="completion" hidden>
                 <input type="date" data-range-start="completion" aria-label="Начало даты завершения">
-                <span class="range-separator">—</span>
+                <span class="range-separator">-</span>
                 <input type="date" data-range-end="completion" aria-label="Окончание даты завершения">
               </div>
             </div>
 
             <label class="filter-field">
               <span>Статус</span>
-              <select>
-                <option>Все статусы</option>
-                <option>В работе</option>
-                <option>На проверке</option>
-                <option>Завершена</option>
+              <select id="statusFilter">
+                <option value="">Все статусы</option>
+                <option value="3">В работе</option>
+                <option value="4">На проверке</option>
+                <option value="5">Завершена</option>
+                <option value="6">Отложена</option>
               </select>
             </label>
           </form>
 
-          <button type="button" class="print-button">Печать</button>
+          <button id="printButton" type="button" class="print-button">Печать</button>
         </div>
 
         <div class="table-wrap">
