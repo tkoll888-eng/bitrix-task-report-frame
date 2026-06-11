@@ -2,8 +2,8 @@
 
 ## Goal
 
-Build a new VibeCode/Bitrix24 application from scratch in `C:\AI\tasks`.
-The application adds a frame/tab to a smart-process item card and shows a task report for tasks linked to the current smart-process item.
+Build a VibeCode/Bitrix24 application in `C:\AI\tasks`.
+The application appears as an additional smart-process tab/frame and shows a task report for tasks linked to the current smart-process item.
 
 The first release is intentionally focused:
 
@@ -36,18 +36,23 @@ If local parameters are missing, the app shows a helper message:
 Для локальной проверки добавьте в URL параметры entityTypeId и itemId, например ?entityTypeId=184&itemId=123.
 ```
 
-## Report Header
+## Main Frame View
 
-The report header shows:
+The main embedded frame is intentionally compact and data-first.
 
-- `Отчет по задачам`
-- Automatically generated company report name:
-  - `Отчет по сопровождению <Компания>` when company is available.
-  - `Отчет по сопровождению` when company is not available.
-- `Объект: <название элемента смарт-процесса>`
-- `Компания: <название компании>` or `Компания: не указана`
-- `Период: <выбранный период фильтра>`
-- `Печать` button
+The main frame view shows:
+
+- A compact top row with filters.
+- A `Печать` button in the same top area.
+- The task table as the dominant visual element.
+- A compact totals strip below the table.
+
+The main frame view does not show:
+
+- A separate page title such as `Отчет по задачам`.
+- A separate summary block for `Объект / Компания / Период`.
+
+`Object`, `Company`, and `Period` are shown only in the HTML print view, not in the main embedded frame.
 
 ## Columns
 
@@ -70,14 +75,14 @@ The technical field code is not known yet. During implementation, it must be fou
 
 ## Filters
 
-The filter panel contains:
+The compact top filter row contains:
 
 - `Отчет за период`
 - `Теги содержит`
 - `Дата завершения`
 - `Статус`
-- `Применить`
-- `Сбросить`
+
+The first release uses an always-visible compact filter row. Separate `Apply` and `Reset` buttons are not required in the visual layout unless they become necessary later for real interaction behavior.
 
 ### Report Period
 
@@ -107,19 +112,13 @@ The default period is the current calendar month.
 
 `Статус` is a multi-select filter. The user can select one or more statuses at the same time, like in the Bitrix24 interface.
 
-The filter displays statuses as in the Bitrix24 interface, for example:
+The app maps status labels to technical task status values for API requests. When several statuses are selected, the report includes tasks matching any selected status.
 
-- `Новая`
-- `В работе`
-- `Ждет контроля`
-- `Завершена`
-- `Отложена`
-
-The app maps these labels to technical task status values for API requests. When several statuses are selected, the report includes tasks matching any selected status.
+For the main frame view, a designer-friendly label such as `На проверке` may be used instead of the stricter Bitrix24 wording, as long as the underlying mapping to technical task statuses stays correct.
 
 ## Totals
 
-Below the main table, the app shows a `Всего` section.
+Below the main table, the app shows a compact totals strip.
 
 The totals are calculated for the current filtered result set:
 
@@ -140,6 +139,8 @@ The print view includes:
 - Selected report period.
 - Task table.
 - Totals for planned effort and spent time.
+
+The print view is the only place where the full report context is mandatory: object, company, period, and generated company report name.
 
 The print view uses print-specific CSS:
 
@@ -179,11 +180,7 @@ If the smart-process context cannot be determined in local mode, show the local 
 
 If the task custom field `Наименование позиции` cannot be found, the report still works. The column is left empty and the backend logs a warning.
 
-If company is not set on the smart-process item, the report still works and shows:
-
-```text
-Компания: не указана
-```
+If company is not set on the smart-process item, the report still works and shows that the company is not specified in the print view.
 
 ## Verification
 
@@ -194,17 +191,18 @@ Before deployment:
 - Verify default period is the current calendar month.
 - Verify `Теги содержит` filtering.
 - Verify completion date quick filters and manual date range.
-- Verify status filter labels match the Bitrix24 interface.
+- Verify status filter labels map correctly to Bitrix24 statuses.
 - Verify several statuses can be selected at the same time.
-- Verify planned effort and spent time totals.
+- Verify the compact totals strip.
 - Verify `Наименование позиции` once the task custom field code is known.
 - Verify HTML print view with the same applied filters.
+- Verify the main frame view does not show the object/company/period context block.
+- Verify the print view does show object, company, and period.
 
 After deployment:
 
 - Verify the app opens as a frame/tab in a smart-process item card.
 - Verify placement context is detected automatically.
-- Verify report header shows object, company, period, and generated company report name.
 - Verify the print view opens from the frame.
 
 ## Open Implementation Detail

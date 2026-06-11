@@ -4,7 +4,6 @@ const express = require('express');
 const path = require('node:path');
 const { readConfig } = require('./src/config');
 
-const config = readConfig();
 const app = express();
 
 app.use(express.json());
@@ -16,6 +15,7 @@ app.get('/api/health', (req, res) => {
 });
 
 if (require.main === module) {
+  const config = readConfig();
   app.listen(config.port, () => {
     console.log(`Task report frame listening on ${config.port}`);
   });
