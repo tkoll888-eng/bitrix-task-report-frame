@@ -20,6 +20,16 @@ test('readContextFromSearch extracts placement context', () => {
   );
 });
 
+test('readContextFromSearch extracts VibeCode lowercase placement context', () => {
+  const placementOptions = encodeURIComponent(JSON.stringify({ ID: 777 }));
+  const search = `?placement=CRM_DYNAMIC_184_DETAIL_TAB&placement_options=${placementOptions}&member_id=portal&__init=jwt`;
+
+  assert.deepEqual(
+    readContextFromSearch(search),
+    { entityTypeId: '184', itemId: 777 },
+  );
+});
+
 test('buildReportQuery serializes active filters for report api', () => {
   const params = buildReportQuery({
     context: { entityTypeId: '184', itemId: '123' },

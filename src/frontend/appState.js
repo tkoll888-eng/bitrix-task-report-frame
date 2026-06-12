@@ -1,19 +1,20 @@
 function readContextFromSearch(search) {
   const params = new URLSearchParams(search);
-  const localEntityTypeId = params.get('entityTypeId');
-  const localItemId = params.get('itemId');
+  const getParam = (name) => params.get(name) || params.get(name.toLowerCase()) || params.get(name.toUpperCase());
+  const localEntityTypeId = getParam('entityTypeId');
+  const localItemId = getParam('itemId');
 
   if (localEntityTypeId && localItemId) {
     return { entityTypeId: localEntityTypeId, itemId: localItemId };
   }
 
-  const placementOptions = params.get('PLACEMENT_OPTIONS');
-  const placement = params.get('PLACEMENT');
+  const placementOptions = getParam('placement_options');
+  const placement = getParam('placement');
   if (placementOptions && placement) {
     try {
       const parsed = JSON.parse(placementOptions);
       const match = placement.match(/CRM_DYNAMIC_(\d+)_DETAIL_TAB/);
-      return { entityTypeId: match?.[1], itemId: parsed.ID };
+      return { entityTypeId: match?.[1], itemId: parsed.ID || parsed.id };
     } catch (error) {
       return {};
     }

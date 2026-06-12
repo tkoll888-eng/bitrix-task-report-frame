@@ -4,7 +4,7 @@
 
 **Goal:** Build and deploy a VibeCode/Bitrix24 app that appears as a smart-process detail tab and shows a filtered task report for the current smart-process item.
 
-**Architecture:** A small Node.js app serves an Express backend and static frontend. The backend talks to VibeCode API, normalizes Bitrix24 task/item data, computes totals, and exposes report JSON plus an HTML print view. The frontend reads Bitrix24 placement context when embedded, falls back to `entityTypeId` and `itemId` query parameters locally, renders filters/table/totals, and opens the print page with the same filters.
+**Architecture:** A small Node.js app serves an Express backend and static frontend. The backend talks to VibeCode API, normalizes Bitrix24 task/item data, computes totals, and exposes report JSON. The frontend reads Bitrix24 placement context when embedded, falls back to `entityTypeId` and `itemId` query parameters locally, renders filters/table/totals, and prints the current authorized frame with the same loaded data and filters.
 
 **Tech Stack:** Node.js 20, Express, dotenv, native `fetch`, native `node:test`, static HTML/CSS/JavaScript, VibeCode API, VibeCode app publishing, Bitrix24 smart-process placement `CRM_DYNAMIC_XXX_DETAIL_TAB`.
 
@@ -69,6 +69,18 @@ The original plan used direct Bitrix24 `placement.bind`. After checking the Vibe
 3. Let VibeCode Gateway inject `X-Vibe-Authorization` when the app is opened inside Bitrix24.
 4. Forward that value to VibeCode API as `Authorization: Bearer ...` together with `X-Api-Key: <VIBECODE_APP_KEY>`.
 5. Replace the old placement binding script with a VibeCode app publish script that calls `POST /v1/apps/:id/publish` and sends `placements: ["CRM_DYNAMIC_<entityTypeId>_DETAIL_TAB"]`.
+
+## Current Print Adjustment
+
+The original implementation plan included a separate `/print.html` page opened in a new browser tab. In the deployed VibeCode embedded app this is not valid for the primary print flow: a new Black Hole subdomain tab does not inherit the current embedded Gateway session and can return `VibeCode HTTP 401`.
+
+Active print behavior:
+
+1. The main `Печать` button calls `window.print()` inside the current authorized Bitrix24/VibeCode iframe.
+2. The screen UI keeps filters and controls visible, but the print stylesheet hides interactive controls.
+3. The print-only context block is rendered in the main page from the already loaded report data.
+4. The print stylesheet uses portrait A4: `@page { size: A4 portrait; margin: 10mm; }`.
+5. `/print.html` may remain as a legacy/local shell, but it must not be the primary embedded print action.
 
 ## Task 1: Scaffold Node App
 
@@ -1512,7 +1524,7 @@ function escapeAttribute(value) {
 document.querySelector('#applyButton').addEventListener('click', loadReport);
 document.querySelector('#resetButton').addEventListener('click', () => window.location.reload());
 document.querySelector('#printButton').addEventListener('click', () => {
-  window.open(`/print.html?${buildQuery().toString()}`, '_blank', 'noopener');
+  window.print();
 });
 
 loadReport().catch((error) => showMessage(error.message));
@@ -1653,7 +1665,7 @@ Append to `public/styles.css`:
 }
 
 @page {
-  size: A4 landscape;
+  size: A4 portrait;
   margin: 10mm;
 }
 ```
@@ -1807,7 +1819,7 @@ node scripts/publish-vibecode-app.js $env:DEPLOYED_APP_URL 184
 
 Expected: VibeCode returns `success: true`, `data.appUrl`, and `data.placements` contains `CRM_DYNAMIC_184_DETAIL_TAB`.
 
-- [ ] **Step 3: Commit VibeCode publish script**
+- [x] **Step 3: Commit VibeCode publish script**
 
 ```bash
 git add scripts/publish-vibecode-app.js .env.example
@@ -1898,7 +1910,7 @@ git commit -m "chore: add vibecode deploy script"
 **Files:**
 - Modify only if verification reveals a bug.
 
-- [ ] **Step 1: Local verification**
+- [x] **Step 1: Local verification**
 
 Run:
 
@@ -1920,7 +1932,7 @@ Expected:
 - Task title links open Bitrix24 task cards.
 - Status filter allows several statuses at once.
 - Totals match visible rows.
-- Print page opens with the same filters.
+- Print layout opens from the current frame with the same loaded data and filters.
 
 - [ ] **Step 2: Deployed frame verification**
 
@@ -1931,7 +1943,7 @@ Expected:
 - The tab `Отчет по задачам` appears.
 - The app reads placement context automatically.
 - The report shows only tasks linked to the current item.
-- The print button opens the HTML print form.
+- The print button opens the browser print dialog inside the current frame without a new tab or `401`.
 
 - [ ] **Step 3: Commit verification fixes if needed**
 

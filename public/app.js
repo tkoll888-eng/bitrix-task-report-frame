@@ -56,20 +56,23 @@
 
   function readContext() {
     const params = new URLSearchParams(window.location.search);
-    const localEntityTypeId = params.get('entityTypeId');
-    const localItemId = params.get('itemId');
+    const getParam = function (name) {
+      return params.get(name) || params.get(name.toLowerCase()) || params.get(name.toUpperCase());
+    };
+    const localEntityTypeId = getParam('entityTypeId');
+    const localItemId = getParam('itemId');
 
     if (localEntityTypeId && localItemId) {
       return { entityTypeId: localEntityTypeId, itemId: localItemId };
     }
 
-    const placementOptions = params.get('PLACEMENT_OPTIONS');
-    const placement = params.get('PLACEMENT');
+    const placementOptions = getParam('placement_options');
+    const placement = getParam('placement');
     if (placementOptions && placement) {
       try {
         const parsed = JSON.parse(placementOptions);
         const match = placement.match(/CRM_DYNAMIC_(\d+)_DETAIL_TAB/);
-        return { entityTypeId: match && match[1], itemId: parsed.ID };
+        return { entityTypeId: match && match[1], itemId: parsed.ID || parsed.id };
       } catch (error) {
         return {};
       }
@@ -400,6 +403,35 @@
     tag.className = 'tag-chip';
     tag.textContent = text;
     return tag;
+  }
+
+  function appendPrintMetaLine(root, label, value) {
+    const line = document.createElement('div');
+    const name = document.createElement('span');
+    const text = document.createElement('strong');
+
+    name.textContent = `${label}: `;
+    text.textContent = value || '—';
+    line.appendChild(name);
+    line.appendChild(text);
+    root.appendChild(line);
+  }
+
+  function renderPrintMeta(report) {
+    const root = document.getElementById('printMeta');
+    if (!root) {
+      return;
+    }
+
+    root.innerHTML = '';
+
+    const heading = document.createElement('h1');
+    heading.textContent = (report.header && report.header.companyReportName) || 'Отчет по задачам';
+    root.appendChild(heading);
+
+    appendPrintMetaLine(root, 'Объект', report.header && report.header.objectName);
+    appendPrintMetaLine(root, 'Компания', report.header && report.header.companyName);
+    appendPrintMetaLine(root, 'Период', report.header && report.header.periodText);
   }
 
   function createStatus(statusLabel, tone) {
@@ -776,6 +808,7 @@
 
   function renderReport(report) {
     state.report = report;
+    renderPrintMeta(report);
     document.getElementById('planned-total').textContent = report.totals.plannedText || '0:00';
     document.getElementById('spent-total').textContent = report.totals.spentText || '0:00';
     document.getElementById('task-count').textContent = String(report.rows.length);
@@ -876,7 +909,7 @@
   }
 
   document.getElementById('printButton').addEventListener('click', function () {
-    window.open(`/print.html?${buildQuery().toString()}`, '_blank', 'noopener');
+    window.print();
   });
 
   bindRangePickers();

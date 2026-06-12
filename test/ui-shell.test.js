@@ -1,5 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
 const request = require('supertest');
 
 function loadAppWithoutApiKey() {
@@ -61,6 +63,7 @@ test('GET / returns compact preview report shell', async () => {
   assert.match(response.text, /id="savedTagSetsQuick"/);
   assert.match(response.text, /id="tagSuggestions" class="tag-suggestions" hidden/);
   assert.match(response.text, /id="savedTagSets" class="tag-sets" hidden/);
+  assert.match(response.text, /id="printMeta"/);
   assert.match(response.text, /Дата завершения/);
   assert.match(response.text, /Печать/);
   assert.match(response.text, /Плановые трудозатраты/);
@@ -85,4 +88,13 @@ test('GET /print.html returns print shell', async () => {
   assert.match(response.text, /print\.js/);
   assert.doesNotMatch(response.text, /Наим\./);
   assert.doesNotMatch(response.text, /Наименование позиции/);
+});
+
+test('print button prints inside current frame without opening a new tab', () => {
+  const appJs = fs.readFileSync(path.join(__dirname, '..', 'public', 'app.js'), 'utf8');
+  const styles = fs.readFileSync(path.join(__dirname, '..', 'public', 'styles.css'), 'utf8');
+
+  assert.match(appJs, /window\.print\(\)/);
+  assert.doesNotMatch(appJs, /window\.open\(`\/print\.html/);
+  assert.match(styles, /size:\s*A4 portrait/);
 });

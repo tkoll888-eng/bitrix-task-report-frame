@@ -227,9 +227,9 @@ Time is displayed in `H:MM` format.
 
 ## Print View
 
-The `Печать` button opens an HTML print view with the currently applied filters.
+The `print` button prints from the current authorized Bitrix24/VibeCode frame. It must not open `/print.html` in a new browser tab, because a new Black Hole subdomain tab does not inherit the embedded VibeCode Gateway session and returns `401`.
 
-The print view includes:
+The print layout includes:
 
 - Automatically generated company report name.
 - Object name.
@@ -238,13 +238,16 @@ The print view includes:
 - Task table.
 - Totals for planned effort and spent time.
 
+The print layout is generated from the already loaded report data in the current frame, so it uses the same smart-process item context and the same applied filters as the visible report.
+
 The print view is the only place where the full report context is mandatory: object, company, period, and generated company report name.
 
 The print view uses print-specific CSS:
 
 - Hide buttons and interactive filters.
-- Keep the table readable on paper.
+- Keep the table readable on portrait A4 paper.
 - Preserve the report header and totals.
+- Use `@page { size: A4 portrait; margin: 10mm; }`.
 
 The first release uses HTML printing only. PDF generation is out of scope.
 
@@ -261,7 +264,7 @@ The first release uses HTML printing only. PDF generation is out of scope.
 9. The backend loads tasks linked to the current smart-process item.
 10. The backend applies or finalizes filters, normalizes fields, maps statuses, and calculates totals.
 11. The frontend renders the report table and totals.
-12. The print view requests the same filtered data and renders a print-ready HTML page.
+12. The print button calls `window.print()` inside the current frame, using print-only markup and CSS based on the current report data.
 
 ## Error Handling
 
@@ -296,16 +299,17 @@ Before deployment:
 - Verify status filter labels map correctly to Bitrix24 statuses.
 - Verify several statuses can be selected at the same time.
 - Verify the compact totals strip.
-- Verify HTML print view with the same applied filters.
+- Verify HTML print layout with the same applied filters.
 - Verify the main frame view does not show the object/company/period context block.
 - Verify the print view does show object, company, and period.
+- Verify the print layout is A4 portrait.
 
 After deployment:
 
 - Verify the app opens as a frame/tab in a smart-process item card.
 - Verify placement context is detected automatically.
 - Verify the backend receives and forwards `X-Vibe-Authorization` for embedded `vibe_app_...` requests.
-- Verify the print view opens from the frame.
+- Verify the print button works inside the frame without opening a new tab or returning `401`.
 
 ## Deployment and Publication
 
