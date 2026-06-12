@@ -80,7 +80,7 @@ The original plan used direct Bitrix24 `placement.bind`. After checking the Vibe
 - Create: `src/config.js`
 - Test: `test/config.test.js`
 
-- [ ] **Step 1: Write config test**
+- [x] **Step 1: Write config test**
 
 Create `test/config.test.js`:
 
@@ -107,13 +107,13 @@ test('readConfig fails when VIBECODE_API_KEY is missing', () => {
 });
 ```
 
-- [ ] **Step 2: Run failing test**
+- [x] **Step 2: Run failing test**
 
 Run: `npm test -- test/config.test.js`
 
 Expected: fails because `package.json` and `src/config.js` do not exist yet.
 
-- [ ] **Step 3: Create project scaffold**
+- [x] **Step 3: Create project scaffold**
 
 Create `package.json`:
 
@@ -215,7 +215,7 @@ if (require.main === module) {
 module.exports = { app };
 ```
 
-- [ ] **Step 4: Install dependencies and run test**
+- [x] **Step 4: Install dependencies and run test**
 
 Run: `npm install`
 
@@ -225,7 +225,7 @@ Run: `npm test -- test/config.test.js`
 
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add package.json package-lock.json .env.example .gitignore server.js src/config.js test/config.test.js
@@ -240,7 +240,7 @@ git commit -m "chore: scaffold task report app"
 - Create: `src/report/time.js`
 - Test: `test/report-utils.test.js`
 
-- [ ] **Step 1: Write utility tests**
+- [x] **Step 1: Write utility tests**
 
 Create `test/report-utils.test.js`:
 
@@ -295,13 +295,13 @@ test('completion quick ranges are stable', () => {
 });
 ```
 
-- [ ] **Step 2: Run failing test**
+- [x] **Step 2: Run failing test**
 
 Run: `npm test -- test/report-utils.test.js`
 
 Expected: FAIL because utility modules do not exist.
 
-- [ ] **Step 3: Implement utilities**
+- [x] **Step 3: Implement utilities**
 
 Create `src/report/statuses.js`:
 
@@ -383,13 +383,13 @@ function getCompletionRange(kind, now = new Date()) {
 module.exports = { toDateOnly, getCurrentMonthRange, getCompletionRange };
 ```
 
-- [ ] **Step 4: Run utility tests**
+- [x] **Step 4: Run utility tests**
 
 Run: `npm test -- test/report-utils.test.js`
 
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/report/statuses.js src/report/time.js src/report/dateRanges.js test/report-utils.test.js
@@ -402,7 +402,7 @@ git commit -m "feat: add report utility functions"
 - Create: `src/report/taskMapper.js`
 - Test: `test/task-mapper.test.js`
 
-- [ ] **Step 1: Write mapper tests**
+- [x] **Step 1: Write mapper tests**
 
 Create `test/task-mapper.test.js`:
 
@@ -457,13 +457,13 @@ test('calculateTotals sums seconds and formats result', () => {
 });
 ```
 
-- [ ] **Step 2: Run failing mapper tests**
+- [x] **Step 2: Run failing mapper tests**
 
 Run: `npm test -- test/task-mapper.test.js`
 
 Expected: FAIL because `taskMapper.js` does not exist.
 
-- [ ] **Step 3: Implement mapper**
+- [x] **Step 3: Implement mapper**
 
 Create `src/report/taskMapper.js`:
 
@@ -533,13 +533,13 @@ function calculateTotals(rows) {
 module.exports = { mapTaskToRow, calculateTotals, formatDate, parseTags, buildTaskUrl };
 ```
 
-- [ ] **Step 4: Run mapper tests**
+- [x] **Step 4: Run mapper tests**
 
 Run: `npm test -- test/task-mapper.test.js`
 
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/report/taskMapper.js test/task-mapper.test.js
@@ -552,7 +552,7 @@ git commit -m "feat: normalize task report rows"
 - Create: `src/report/filters.js`
 - Test: `test/filters.test.js`
 
-- [ ] **Step 1: Write filter tests**
+- [x] **Step 1: Write filter tests**
 
 Create `test/filters.test.js`:
 
@@ -609,13 +609,13 @@ test('applyClientFilters filters by activity period, tag, completion, and status
 });
 ```
 
-- [ ] **Step 2: Run failing filter tests**
+- [x] **Step 2: Run failing filter tests**
 
 Run: `npm test -- test/filters.test.js`
 
 Expected: FAIL because `filters.js` does not exist.
 
-- [ ] **Step 3: Implement filters**
+- [x] **Step 3: Implement filters**
 
 Create `src/report/filters.js`:
 
@@ -674,13 +674,13 @@ function applyClientFilters(rows, filters) {
 module.exports = { normalizeFilters, applyClientFilters, inRange };
 ```
 
-- [ ] **Step 4: Run filter tests**
+- [x] **Step 4: Run filter tests**
 
 Run: `npm test -- test/filters.test.js`
 
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/report/filters.js test/filters.test.js
@@ -694,7 +694,7 @@ git commit -m "feat: add task report filters"
 - Create: `scripts/discover.js`
 - Test: `test/vibecode-client.test.js`
 
-- [ ] **Step 1: Write client tests**
+- [x] **Step 1: Write client tests**
 
 Create `test/vibecode-client.test.js`:
 
@@ -736,13 +736,13 @@ test('client sends X-Api-Key and parses successful response', async () => {
 });
 ```
 
-- [ ] **Step 2: Run failing client tests**
+- [x] **Step 2: Run failing client tests**
 
 Run: `npm test -- test/vibecode-client.test.js`
 
 Expected: FAIL because `vibecodeClient.js` does not exist.
 
-- [ ] **Step 3: Implement VibeCode client**
+- [x] **Step 3: Implement VibeCode client**
 
 Create `src/vibecodeClient.js`:
 
@@ -836,13 +836,13 @@ main().catch((error) => {
 });
 ```
 
-- [ ] **Step 4: Run client tests**
+- [x] **Step 4: Run client tests**
 
 Run: `npm test -- test/vibecode-client.test.js`
 
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/vibecodeClient.js scripts/discover.js test/vibecode-client.test.js
@@ -855,7 +855,7 @@ git commit -m "feat: add vibecode client"
 - Create: `src/report/reportService.js`
 - Test: `test/report-service.test.js`
 
-- [ ] **Step 1: Write report service test**
+- [x] **Step 1: Write report service test**
 
 Create `test/report-service.test.js`:
 
@@ -923,13 +923,13 @@ test('buildReport loads item, company, tasks, rows and totals', async () => {
 });
 ```
 
-- [ ] **Step 2: Run failing report service test**
+- [x] **Step 2: Run failing report service test**
 
 Run: `npm test -- test/report-service.test.js`
 
 Expected: FAIL because `reportService.js` does not exist.
 
-- [ ] **Step 3: Implement report service**
+- [x] **Step 3: Implement report service**
 
 Create `src/report/reportService.js`:
 
@@ -1006,13 +1006,13 @@ function createReportService({ client, config }) {
 module.exports = { createReportService, createTaskSearchBody, buildCompanyReportName };
 ```
 
-- [ ] **Step 4: Run report service test**
+- [x] **Step 4: Run report service test**
 
 Run: `npm test -- test/report-service.test.js`
 
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/report/reportService.js test/report-service.test.js
@@ -1026,7 +1026,7 @@ git commit -m "feat: build task report service"
 - Create: `src/routes/reportRoutes.js`
 - Test: `test/routes.test.js`
 
-- [ ] **Step 1: Write route test**
+- [x] **Step 1: Write route test**
 
 Create `test/routes.test.js`:
 
@@ -1065,13 +1065,13 @@ test('GET /api/report returns report JSON', async () => {
 });
 ```
 
-- [ ] **Step 2: Run failing route test**
+- [x] **Step 2: Run failing route test**
 
 Run: `npm test -- test/routes.test.js`
 
 Expected: FAIL because `reportRoutes.js` does not exist.
 
-- [ ] **Step 3: Implement route module and wire server**
+- [x] **Step 3: Implement route module and wire server**
 
 Create `src/routes/reportRoutes.js`:
 
@@ -1143,19 +1143,19 @@ if (require.main === module) {
 module.exports = { app };
 ```
 
-- [ ] **Step 4: Run route tests**
+- [x] **Step 4: Run route tests**
 
 Run: `npm test -- test/routes.test.js`
 
 Expected: PASS.
 
-- [ ] **Step 5: Run all tests**
+- [x] **Step 5: Run all tests**
 
 Run: `npm test`
 
 Expected: PASS.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add server.js src/routes/reportRoutes.js test/routes.test.js
@@ -1169,7 +1169,7 @@ git commit -m "feat: expose task report api"
 - Create: `public/styles.css`
 - Create: `public/app.js`
 
-- [ ] **Step 1: Create HTML shell**
+- [x] **Step 1: Create HTML shell**
 
 Create `public/index.html`:
 
@@ -1226,7 +1226,7 @@ Create `public/index.html`:
 </html>
 ```
 
-- [ ] **Step 2: Create report CSS**
+- [x] **Step 2: Create report CSS**
 
 Create `public/styles.css`:
 
@@ -1376,7 +1376,7 @@ select {
 }
 ```
 
-- [ ] **Step 3: Create frontend JavaScript**
+- [x] **Step 3: Create frontend JavaScript**
 
 Create `public/app.js`:
 
@@ -1518,7 +1518,7 @@ document.querySelector('#printButton').addEventListener('click', () => {
 loadReport().catch((error) => showMessage(error.message));
 ```
 
-- [ ] **Step 4: Run local server smoke check**
+- [x] **Step 4: Run local server smoke check**
 
 Run: `npm start`
 
@@ -1526,7 +1526,7 @@ Open: `http://localhost:3000/?entityTypeId=184&itemId=123`
 
 Expected: page loads and either shows report data or a clear API error.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add public/index.html public/styles.css public/app.js
@@ -1540,7 +1540,7 @@ git commit -m "feat: add embedded report frontend"
 - Create: `public/print.js`
 - Modify: `public/styles.css`
 
-- [ ] **Step 1: Create print HTML**
+- [x] **Step 1: Create print HTML**
 
 Create `public/print.html`:
 
@@ -1569,7 +1569,7 @@ Create `public/print.html`:
 </html>
 ```
 
-- [ ] **Step 2: Create print JavaScript**
+- [x] **Step 2: Create print JavaScript**
 
 Create `public/print.js`:
 
@@ -1637,7 +1637,7 @@ document.querySelector('#printNowButton').addEventListener('click', () => window
 loadPrintReport();
 ```
 
-- [ ] **Step 3: Add print CSS refinements**
+- [x] **Step 3: Add print CSS refinements**
 
 Append to `public/styles.css`:
 
@@ -1658,13 +1658,13 @@ Append to `public/styles.css`:
 }
 ```
 
-- [ ] **Step 4: Manual print smoke check**
+- [x] **Step 4: Manual print smoke check**
 
 Open: `http://localhost:3000/print.html?entityTypeId=184&itemId=123`
 
 Expected: print page loads same report header/table/totals and `Печать` triggers browser print.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add public/print.html public/print.js public/styles.css
@@ -1678,7 +1678,7 @@ git commit -m "feat: add html print view"
 - Modify: `.env.example`
 - Test: manual API run
 
-- [ ] **Step 1: Extend discovery script for item/task sample**
+- [x] **Step 1: Extend discovery script for item/task sample**
 
 Modify `scripts/discover.js` to accept `entityTypeId` and `itemId`:
 
@@ -1722,7 +1722,7 @@ main().catch((error) => {
 });
 ```
 
-- [ ] **Step 2: Run discovery with real IDs**
+- [x] **Step 2: Run discovery with real IDs**
 
 Create `.env` from `.env.example` and set `VIBECODE_API_KEY`.
 
@@ -1730,7 +1730,7 @@ Run: `npm run discover -- 184 123`
 
 Expected: JSON output shows `positionFieldCode`, item title/company fields, and up to three tasks. If `sampleTasks` is empty for a known item with tasks, inspect output and adjust `createTaskSearchBody` in Task 6 to the real binding field returned by VibeCode.
 
-- [ ] **Step 3: Commit discovery improvement**
+- [x] **Step 3: Commit discovery improvement**
 
 ```bash
 git add scripts/discover.js .env.example
@@ -1746,7 +1746,7 @@ git commit -m "chore: add live portal discovery script"
 
 > Current correction: do not implement the old direct Bitrix24 `placement.bind` script for this project path. Use VibeCode app publishing with `VIBECODE_APP_KEY`, `VIBECODE_APP_ID`, `appUrl`, and `placements`.
 
-- [ ] **Step 1: Create VibeCode app publish script**
+- [x] **Step 1: Create VibeCode app publish script**
 
 Create `scripts/publish-vibecode-app.js`:
 
@@ -1821,7 +1821,7 @@ git commit -m "chore: add vibecode app publish script"
 - Modify: `.env.example`
 - Test: live deploy
 
-- [ ] **Step 1: Create deploy script**
+- [x] **Step 1: Create deploy script**
 
 Create `scripts/deploy-vibecode.ps1`:
 
@@ -1859,7 +1859,7 @@ $body = @{
 Invoke-RestMethod -Uri "https://vibecode.bitrix24.tech/v1/infra/servers/$ServerId/deploy" -Headers $headers -Method Post -Body $body
 ```
 
-- [ ] **Step 2: Deploy**
+- [x] **Step 2: Deploy**
 
 Run:
 
@@ -1871,7 +1871,7 @@ $env:VIBECODE_API_KEY = 'vibecode-api-key-from-secure-local-env'
 
 Expected: VibeCode deploy response returns success and a public app URL or the server status/logs show the tunnel URL.
 
-- [ ] **Step 3: Verify deployed health**
+- [x] **Step 3: Verify deployed health**
 
 Run:
 
