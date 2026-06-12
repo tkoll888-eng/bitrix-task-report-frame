@@ -83,7 +83,7 @@ Frontend отвечает за:
 - `public/print.js`
 - `scripts/discover.js`
 - `scripts/deploy-vibecode.ps1`
-- `scripts/bind-placement.js`
+- `scripts/publish-vibecode-app.js`
 - `test/*.test.js`
 
 ## Внешние контракты
@@ -325,3 +325,12 @@ Frontend отвечает за:
 ## Статус согласования
 
 Если этот файл отражает то, что ты хочешь получить, его можно считать русской версией плана для утверждения.
+
+## Current VibeCode Correction
+
+- Embedded Bitrix24 mode uses `VIBECODE_APP_KEY` (`vibe_app_...`), not `BITRIX24_WEBHOOK_URL`.
+- Local/server discovery can still use `VIBECODE_API_KEY` (`vibe_api_...`).
+- VibeCode Gateway passes the user session to the backend as `X-Vibe-Authorization: Bearer vibe_session_...`.
+- The backend forwards that value to VibeCode API as `Authorization: Bearer ...` together with `X-Api-Key: <VIBECODE_APP_KEY>`.
+- Placement publication is done through VibeCode app publishing: `POST /v1/apps/:id/publish`.
+- The active publication script is `scripts/publish-vibecode-app.js`; direct Bitrix24 `placement.bind` is not the active project path.

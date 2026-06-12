@@ -1,9 +1,10 @@
 const TASK_STATUSES = [
-  { value: 2, label: 'Ждет выполнения' },
-  { value: 3, label: 'В работе' },
-  { value: 4, label: 'Ждет контроля' },
+  { value: 2, label: 'Ждёт выполнения' },
+  { value: 3, label: 'Выполняется' },
+  { value: 4, label: 'Ожидает контроля' },
   { value: 5, label: 'Завершена' },
   { value: 6, label: 'Отложена' },
+  { value: 7, label: 'Отклонена' },
 ];
 
 function getStatusLabel(value) {

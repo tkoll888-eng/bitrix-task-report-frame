@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { mapTaskToRow, calculateTotals } = require('../src/report/taskMapper');
+const { mapTaskToRow, calculateTotals, parseTags } = require('../src/report/taskMapper');
 
 test('mapTaskToRow normalizes task fields for table', () => {
   const row = mapTaskToRow({
@@ -23,7 +23,7 @@ test('mapTaskToRow normalizes task fields for table', () => {
   assert.equal(row.id, 99);
   assert.equal(row.title, 'Настроить отчет');
   assert.equal(row.titleUrl, 'https://solution24.bitrix24.ru/company/personal/user/0/tasks/task/view/99/');
-  assert.equal(row.statusLabel, 'В работе');
+  assert.equal(row.statusLabel, 'Выполняется');
   assert.equal(row.createdDateText, '03.06.2026');
   assert.equal(row.deadlineText, '05.06.2026');
   assert.equal(row.closedDateText, '');
@@ -45,4 +45,39 @@ test('calculateTotals sums seconds and formats result', () => {
     plannedText: '1:15',
     spentText: '0:25',
   });
+});
+
+test('parseTags extracts readable titles from Bitrix object tags', () => {
+  const tags = parseTags({
+    31: { id: 31, title: 'Настройка' },
+    57: { id: 57, title: 'Срочно' },
+  });
+
+  assert.deepEqual(tags, ['Настройка', 'Срочно']);
+});
+
+test('parseTags extracts uppercase Bitrix tag title fields', () => {
+  const tags = parseTags([
+    { ID: 31, TITLE: 'Настройка' },
+    { id: 57, NAME: 'Срочно' },
+    { value: 'CRM' },
+  ]);
+
+  assert.deepEqual(tags, ['Настройка', 'Срочно', 'CRM']);
+});
+
+test('mapTaskToRow reads position name from VibeCode auto field key', () => {
+  const row = mapTaskToRow({
+    id: 101,
+    title: 'Тест',
+    status: 2,
+    createdDate: '2026-06-03T09:00:00+02:00',
+    changedDate: '2026-06-03T09:00:00+02:00',
+    ufAuto583853685266: 'Позиция из пользовательского поля',
+  }, {
+    portalHost: 'solution24.bitrix24.ru',
+    positionFieldCode: 'UF_AUTO_583853685266',
+  });
+
+  assert.equal(row.positionName, 'Позиция из пользовательского поля');
 });

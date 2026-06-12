@@ -49,6 +49,7 @@ function normalizeFilters(input = {}, now = new Date()) {
     periodFrom: periodRange.from,
     periodTo: periodRange.to,
     tagContains: String(input.tagContains || '').trim().toLowerCase(),
+    tags: normalizeTagList(input.tags),
     completionPreset,
     completionFrom: completionRange.from,
     completionTo: completionRange.to,
@@ -56,7 +57,22 @@ function normalizeFilters(input = {}, now = new Date()) {
   };
 }
 
+function normalizeTagList(value) {
+  const rawValues = Array.isArray(value)
+    ? value
+    : String(value || '')
+      .split(',');
+
+  return rawValues
+    .map((item) => String(item || '').trim().toLowerCase())
+    .filter(Boolean);
+}
+
 function getPresetRange(preset, from, to, now) {
+  if (preset === 'allTime') {
+    return { from: '', to: '' };
+  }
+
   if (preset === 'custom') {
     return {
       from: from || '',
@@ -68,8 +84,16 @@ function getPresetRange(preset, from, to, now) {
     return getCompletionRange('week', now);
   }
 
+  if (preset === 'previousWeek') {
+    return getCompletionRange('previousWeek', now);
+  }
+
   if (preset === 'today') {
     return getCompletionRange('today', now);
+  }
+
+  if (preset === 'previousMonth') {
+    return getCompletionRange('previousMonth', now);
   }
 
   const month = getCurrentMonthRange(now);
@@ -89,6 +113,17 @@ function applyClientFilters(rows, filters) {
     if (filters.tagContains) {
       const hasTag = row.tags.some((tag) => tag.toLowerCase().includes(filters.tagContains));
       if (!hasTag) {
+        return false;
+      }
+    }
+
+    if (filters.tags.length > 0) {
+      const hasSelectedTag = row.tags.some((tag) => {
+        const normalizedTag = tag.toLowerCase();
+        return filters.tags.some((selectedTag) => normalizedTag.includes(selectedTag));
+      });
+
+      if (!hasSelectedTag) {
         return false;
       }
     }

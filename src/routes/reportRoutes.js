@@ -13,7 +13,12 @@ function createReportRouter({ reportService }) {
         });
       }
 
-      const report = await reportService.buildReport({ entityTypeId, itemId, filters });
+      const report = await reportService.buildReport({
+        entityTypeId,
+        itemId,
+        filters,
+        authorization: req.get('X-Vibe-Authorization') || '',
+      });
       return res.json({ success: true, data: report });
     } catch (error) {
       console.error(error);

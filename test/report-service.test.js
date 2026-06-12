@@ -1,6 +1,56 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { createReportService } = require('../src/report/reportService');
+const { createReportService, createTaskSearchBody } = require('../src/report/reportService');
+
+test('createTaskSearchBody builds UF_CRM_TASK code for smart-process binding', () => {
+  assert.deepEqual(createTaskSearchBody(184, 83), {
+    filter: {
+      UF_CRM_TASK: 'Tb8_83',
+    },
+    sort: '-changedDate',
+    limit: 500,
+  });
+});
+
+test('buildReport forwards embedded authorization to every VibeCode request', async () => {
+  const seenAuthorizations = [];
+  const client = {
+    async getItem(entityTypeId, itemId, requestOptions) {
+      seenAuthorizations.push(requestOptions?.authorization);
+      return { id: itemId, title: 'Object' };
+    },
+    async getTaskFields(requestOptions) {
+      seenAuthorizations.push(requestOptions?.authorization);
+      return [];
+    },
+    async searchTasks(body, requestOptions) {
+      seenAuthorizations.push(requestOptions?.authorization);
+      return [];
+    },
+  };
+
+  const service = createReportService({
+    client,
+    config: {
+      taskPositionFieldName: 'Position',
+      taskPositionFieldCode: '',
+      publicPortalHost: 'solution24.bitrix24.ru',
+    },
+  });
+
+  await service.buildReport({
+    entityTypeId: 184,
+    itemId: 123,
+    filters: {},
+    authorization: 'Bearer vibe_session_test',
+  });
+
+  assert.deepEqual(seenAuthorizations, [
+    'Bearer vibe_session_test',
+    'Bearer vibe_session_test',
+    'Bearer vibe_session_test',
+  ]);
+});
 
 test('buildReport loads item, company, tasks, rows and totals', async () => {
   const client = {
@@ -16,7 +66,14 @@ test('buildReport loads item, company, tasks, rows and totals', async () => {
     async getTaskFields() {
       return [{ code: 'UF_TASK_POSITION', title: 'Наименование позиции' }];
     },
-    async searchTasks() {
+    async searchTasks(body) {
+      assert.deepEqual(body, {
+        filter: {
+          UF_CRM_TASK: 'Tb8_123',
+        },
+        sort: '-changedDate',
+        limit: 500,
+      });
       return [
         {
           id: 10,

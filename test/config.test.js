@@ -15,6 +15,17 @@ test('readConfig returns defaults and required values', () => {
   assert.equal(config.taskPositionFieldName, 'Наименование позиции');
 });
 
-test('readConfig fails when VIBECODE_API_KEY is missing', () => {
-  assert.throws(() => readConfig({}), /VIBECODE_API_KEY/);
+test('readConfig prefers embedded VIBECODE_APP_KEY when present', () => {
+  const config = readConfig({
+    VIBECODE_API_KEY: 'personal-key',
+    VIBECODE_APP_KEY: 'app-key',
+  });
+
+  assert.equal(config.vibecodeApiKey, 'app-key');
+  assert.equal(config.vibecodeAppKey, 'app-key');
+  assert.equal(config.vibecodePersonalApiKey, 'personal-key');
+});
+
+test('readConfig fails when neither VIBECODE_APP_KEY nor VIBECODE_API_KEY is present', () => {
+  assert.throws(() => readConfig({}), /VIBECODE_APP_KEY or VIBECODE_API_KEY/);
 });

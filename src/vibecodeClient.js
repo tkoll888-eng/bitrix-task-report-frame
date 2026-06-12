@@ -7,13 +7,16 @@ function unwrapResponse(payload) {
 }
 
 async function requestJson(fetchImpl, baseUrl, apiKey, path, options = {}) {
+  const headers = {
+    'Content-Type': 'application/json',
+    'X-Api-Key': apiKey,
+    ...(options.authorization ? { Authorization: options.authorization } : {}),
+    ...(options.headers || {}),
+  };
+
   const response = await fetchImpl(`${baseUrl}${path}`, {
     method: options.method || 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-Api-Key': apiKey,
-      ...(options.headers || {}),
-    },
+    headers,
     body: options.body ? JSON.stringify(options.body) : undefined,
   });
 
@@ -27,7 +30,11 @@ async function requestJson(fetchImpl, baseUrl, apiKey, path, options = {}) {
 
 function findFieldCodeByTitle(fields, title) {
   const normalizedTitle = String(title).trim().toLowerCase();
-  const list = Array.isArray(fields) ? fields : Object.values(fields || {});
+  const list = Array.isArray(fields)
+    ? fields
+    : fields && typeof fields === 'object' && fields.fields && typeof fields.fields === 'object'
+      ? Object.entries(fields.fields).map(([code, meta]) => ({ code, ...meta }))
+      : Object.values(fields || {});
   const match = list.find((field) => {
     const fieldTitle = String(field.title || field.name || field.label || '').trim().toLowerCase();
     return fieldTitle === normalizedTitle;
@@ -38,20 +45,21 @@ function findFieldCodeByTitle(fields, title) {
 
 function createVibecodeClient({ baseUrl, apiKey, fetchImpl = fetch }) {
   return {
-    getTaskFields() {
-      return requestJson(fetchImpl, baseUrl, apiKey, '/tasks/fields');
+    getTaskFields(requestOptions = {}) {
+      return requestJson(fetchImpl, baseUrl, apiKey, '/tasks/fields', requestOptions);
     },
-    searchTasks(body) {
+    searchTasks(body, requestOptions = {}) {
       return requestJson(fetchImpl, baseUrl, apiKey, '/tasks/search', {
+        ...requestOptions,
         method: 'POST',
         body,
       });
     },
-    getItem(entityTypeId, itemId) {
-      return requestJson(fetchImpl, baseUrl, apiKey, `/items/${entityTypeId}/${itemId}`);
+    getItem(entityTypeId, itemId, requestOptions = {}) {
+      return requestJson(fetchImpl, baseUrl, apiKey, `/items/${entityTypeId}/${itemId}`, requestOptions);
     },
-    getCompany(companyId) {
-      return requestJson(fetchImpl, baseUrl, apiKey, `/companies/${companyId}`);
+    getCompany(companyId, requestOptions = {}) {
+      return requestJson(fetchImpl, baseUrl, apiKey, `/companies/${companyId}`, requestOptions);
     },
   };
 }

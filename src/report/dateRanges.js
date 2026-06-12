@@ -11,25 +11,53 @@ function getCurrentMonthRange(now = new Date()) {
   return { from: toDateOnly(from), to: toDateOnly(to) };
 }
 
+function getPreviousMonthRange(now = new Date()) {
+  const from = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const to = new Date(now.getFullYear(), now.getMonth(), 0);
+  return { from: toDateOnly(from), to: toDateOnly(to) };
+}
+
+function getWeekRange(offsetWeeks, now = new Date()) {
+  const day = now.getDay() || 7;
+  const from = new Date(now);
+  from.setDate(now.getDate() - day + 1 + (offsetWeeks * 7));
+  const to = new Date(from);
+  to.setDate(from.getDate() + 6);
+  return { from: toDateOnly(from), to: toDateOnly(to) };
+}
+
 function getCompletionRange(kind, now = new Date()) {
+  if (kind === 'allTime') {
+    return { from: '', to: '' };
+  }
+
   if (kind === 'today') {
     return { from: toDateOnly(now), to: toDateOnly(now) };
   }
 
   if (kind === 'week') {
-    const day = now.getDay() || 7;
-    const from = new Date(now);
-    from.setDate(now.getDate() - day + 1);
-    const to = new Date(from);
-    to.setDate(from.getDate() + 6);
-    return { from: toDateOnly(from), to: toDateOnly(to) };
+    return getWeekRange(0, now);
+  }
+
+  if (kind === 'previousWeek') {
+    return getWeekRange(-1, now);
   }
 
   if (kind === 'month') {
     return getCurrentMonthRange(now);
   }
 
+  if (kind === 'previousMonth') {
+    return getPreviousMonthRange(now);
+  }
+
   return { from: '', to: '' };
 }
 
-module.exports = { toDateOnly, getCurrentMonthRange, getCompletionRange };
+module.exports = {
+  toDateOnly,
+  getCurrentMonthRange,
+  getPreviousMonthRange,
+  getWeekRange,
+  getCompletionRange,
+};

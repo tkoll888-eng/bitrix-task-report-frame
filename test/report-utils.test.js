@@ -5,12 +5,13 @@ const { formatSeconds, sumSeconds } = require('../src/report/time');
 const { getCurrentMonthRange, getCompletionRange } = require('../src/report/dateRanges');
 
 test('status labels match Bitrix24 interface names', () => {
-  assert.equal(getStatusLabel(2), 'Ждет выполнения');
-  assert.equal(getStatusLabel(3), 'В работе');
-  assert.equal(getStatusLabel(4), 'Ждет контроля');
+  assert.equal(getStatusLabel(2), 'Ждёт выполнения');
+  assert.equal(getStatusLabel(3), 'Выполняется');
+  assert.equal(getStatusLabel(4), 'Ожидает контроля');
   assert.equal(getStatusLabel(5), 'Завершена');
   assert.equal(getStatusLabel(6), 'Отложена');
-  assert.equal(TASK_STATUSES.length, 5);
+  assert.equal(getStatusLabel(7), 'Отклонена');
+  assert.equal(TASK_STATUSES.length, 6);
 });
 
 test('parseStatusList supports multi-select query values', () => {

@@ -6,7 +6,7 @@
 
 **Architecture:** A small Node.js app serves an Express backend and static frontend. The backend talks to VibeCode API, normalizes Bitrix24 task/item data, computes totals, and exposes report JSON plus an HTML print view. The frontend reads Bitrix24 placement context when embedded, falls back to `entityTypeId` and `itemId` query parameters locally, renders filters/table/totals, and opens the print page with the same filters.
 
-**Tech Stack:** Node.js 20, Express, dotenv, native `fetch`, native `node:test`, static HTML/CSS/JavaScript, VibeCode API, Bitrix24 REST placement `CRM_DYNAMIC_XXX_DETAIL_TAB`.
+**Tech Stack:** Node.js 20, Express, dotenv, native `fetch`, native `node:test`, static HTML/CSS/JavaScript, VibeCode API, VibeCode app publishing, Bitrix24 smart-process placement `CRM_DYNAMIC_XXX_DETAIL_TAB`.
 
 **Execution order adjustment:** Build a previewable embedded frontend shell immediately after scaffolding so the user can see the report UI early. It is acceptable for that early shell to use mocked data or a stub route first, then wire it to the real report service, filters, and print flow in later tasks.
 
@@ -16,8 +16,9 @@
 
 - Spec: `docs/superpowers/specs/2026-06-03-task-report-frame-design.ru.md`
 - VibeCode OpenAPI snapshot: `openapi.json`
-- Official Bitrix24 placement docs: `CRM_DYNAMIC_XXX_DETAIL_TAB` is the tab placement for smart-process item detail forms.
-- Official Bitrix24 `placement.bind` docs: bind the app handler URL after deployment.
+- VibeCode Quickstart: embedded Bitrix24 apps require an authorization key (`vibe_app_...`).
+- VibeCode keys/auth docs: embedded Black Hole requests receive `X-Vibe-Authorization: Bearer vibe_session_...`; the backend forwards it to VibeCode API as `Authorization: Bearer ...`.
+- VibeCode apps docs: publish an app through `POST /v1/apps/:id/publish`; dynamic smart-process placement codes such as `CRM_DYNAMIC_<entityTypeId>_DETAIL_TAB` are supported.
 
 ## File Structure
 
@@ -41,19 +42,33 @@
 - Create: `public/print.js` — print page rendering.
 - Create: `scripts/discover.js` — diagnostic script for task fields and task binding format.
 - Create: `scripts/deploy-vibecode.ps1` — archive and deploy to VibeCode server.
-- Create: `scripts/bind-placement.js` — bind Bitrix24 smart-process tab after deploy.
+- Create: `scripts/publish-vibecode-app.js` — publish the VibeCode app with smart-process placements after deploy.
 - Create: `test/*.test.js` — unit and route tests.
 
 ## External Contracts
 
 - VibeCode API base URL: `https://vibecode.bitrix24.tech/v1`.
 - Auth header: `X-Api-Key`.
+- Embedded gateway session header: `X-Vibe-Authorization: Bearer vibe_session_...`.
+- Forwarded VibeCode app request header: `Authorization: Bearer vibe_session_...`.
 - Task search endpoint: `POST /v1/tasks/search`.
 - Task fields endpoint: `GET /v1/tasks/fields`.
 - Smart-process item endpoint: `GET /v1/items/{entityTypeId}/{id}`.
 - Company endpoint: `GET /v1/companies/{id}` when `companyId` exists.
 - Deploy endpoint: `POST /v1/infra/servers/{id}/deploy`.
+- App publish endpoint: `POST /v1/apps/{id}/publish`.
 - Placement code after deploy: `CRM_DYNAMIC_${entityTypeId}_DETAIL_TAB`.
+- Direct Bitrix24 incoming webhook `placement.bind` is not the primary installation path for this project.
+
+## Current VibeCode Adjustment
+
+The original plan used direct Bitrix24 `placement.bind`. After checking the VibeCode documentation, the active implementation path is:
+
+1. Use `VIBECODE_API_KEY` (`vibe_api_...`) for local server-to-server checks and discovery.
+2. Add `VIBECODE_APP_KEY` (`vibe_app_...`) for embedded Bitrix24 app mode.
+3. Let VibeCode Gateway inject `X-Vibe-Authorization` when the app is opened inside Bitrix24.
+4. Forward that value to VibeCode API as `Authorization: Bearer ...` together with `X-Api-Key: <VIBECODE_APP_KEY>`.
+5. Replace the old placement binding script with a VibeCode app publish script that calls `POST /v1/apps/:id/publish` and sends `placements: ["CRM_DYNAMIC_<entityTypeId>_DETAIL_TAB"]`.
 
 ## Task 1: Scaffold Node App
 
@@ -1722,41 +1737,54 @@ git add scripts/discover.js .env.example
 git commit -m "chore: add live portal discovery script"
 ```
 
-## Task 11: Register Bitrix24 Placement
+## Task 11: Publish VibeCode App Placement
 
 **Files:**
-- Create: `scripts/bind-placement.js`
-- Test: manual Bitrix24/MCP call after deployment
+- Create: `scripts/publish-vibecode-app.js`
+- Modify: `.env.example`
+- Test: manual VibeCode API call after deployment
 
-- [ ] **Step 1: Create placement binding script**
+> Current correction: do not implement the old direct Bitrix24 `placement.bind` script for this project path. Use VibeCode app publishing with `VIBECODE_APP_KEY`, `VIBECODE_APP_ID`, `appUrl`, and `placements`.
 
-Create `scripts/bind-placement.js`:
+- [ ] **Step 1: Create VibeCode app publish script**
+
+Create `scripts/publish-vibecode-app.js`:
 
 ```js
 require('dotenv').config();
 
-const { BitrixMcpClient, loadToken } = require('C:/AI/bitrix-mcp-client/src/client');
+async function requestJson(url, apiKey, body) {
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Api-Key': apiKey,
+    },
+    body: JSON.stringify(body),
+  });
+  const payload = await response.json();
+  if (!response.ok || payload.success === false) {
+    throw new Error(payload?.error?.message || payload?.message || `VibeCode HTTP ${response.status}`);
+  }
+  return payload;
+}
 
 async function main() {
-  const entityTypeId = process.argv[2];
-  const handlerUrl = process.argv[3];
+  const appId = process.env.VIBECODE_APP_ID;
+  const apiKey = process.env.VIBECODE_APP_KEY || process.env.VIBECODE_API_KEY;
+  const appUrl = process.argv[2];
+  const entityTypeId = process.argv[3];
 
-  if (!entityTypeId || !handlerUrl) {
-    throw new Error('Usage: node scripts/bind-placement.js <entityTypeId> <handlerUrl>');
+  if (!appId || !apiKey || !appUrl || !entityTypeId) {
+    throw new Error('Usage: VIBECODE_APP_ID=... VIBECODE_APP_KEY=... node scripts/publish-vibecode-app.js <appUrl> <entityTypeId>');
   }
 
+  const baseUrl = process.env.VIBECODE_API_BASE || 'https://vibecode.bitrix24.tech/v1';
   const placement = `CRM_DYNAMIC_${entityTypeId}_DETAIL_TAB`;
-  const client = new BitrixMcpClient({ token: loadToken() });
-  await client.initialize();
-
-  const result = await client.callTool('call_method', {
-    method: 'placement.bind',
-    params: {
-      PLACEMENT: placement,
-      HANDLER: handlerUrl,
-      TITLE: 'Отчет по задачам',
-      DESCRIPTION: 'Отчет по задачам текущего элемента',
-    },
+  const result = await requestJson(`${baseUrl}/apps/${appId}/publish`, apiKey, {
+    catalogTitle: 'Отчет по задачам',
+    appUrl,
+    placements: [placement],
   });
 
   console.log(JSON.stringify({ placement, result }, null, 2));
@@ -1768,22 +1796,22 @@ main().catch((error) => {
 });
 ```
 
-- [ ] **Step 2: Run placement binding after deploy**
+- [ ] **Step 2: Publish placement after deploy**
 
 Run after deployment URL is known:
 
 ```bash
 $env:DEPLOYED_APP_URL = 'https://your-vibecode-app-url.example'
-node scripts/bind-placement.js 184 $env:DEPLOYED_APP_URL
+node scripts/publish-vibecode-app.js $env:DEPLOYED_APP_URL 184
 ```
 
-Expected: Bitrix24 REST returns success and the tab appears in the smart-process item card.
+Expected: VibeCode returns `success: true`, `data.appUrl`, and `data.placements` contains `CRM_DYNAMIC_184_DETAIL_TAB`.
 
-- [ ] **Step 3: Commit placement script**
+- [ ] **Step 3: Commit VibeCode publish script**
 
 ```bash
-git add scripts/bind-placement.js
-git commit -m "chore: add placement binding script"
+git add scripts/publish-vibecode-app.js .env.example
+git commit -m "chore: add vibecode app publish script"
 ```
 
 ## Task 12: Deploy to VibeCode

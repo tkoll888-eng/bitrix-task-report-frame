@@ -30,3 +30,21 @@ test('GET /api/report returns report JSON', async () => {
   assert.equal(response.status, 200);
   assert.deepEqual(response.body, { success: true, data: report });
 });
+
+test('GET /api/report forwards embedded VibeCode authorization header', async () => {
+  const app = express();
+  app.use('/api/report', createReportRouter({
+    reportService: {
+      async buildReport(params) {
+        assert.equal(params.authorization, 'Bearer vibe_session_test');
+        return { header: {}, rows: [], totals: {} };
+      },
+    },
+  }));
+
+  const response = await request(app)
+    .get('/api/report?entityTypeId=184&itemId=123')
+    .set('X-Vibe-Authorization', 'Bearer vibe_session_test');
+
+  assert.equal(response.status, 200);
+});

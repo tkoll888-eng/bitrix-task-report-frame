@@ -23,6 +23,13 @@ function readContextFromSearch(search) {
 }
 
 function buildReportQuery({ context, filters }) {
+  const tags = Array.isArray(filters.tags)
+    ? filters.tags.map((value) => String(value || '').trim()).filter(Boolean)
+    : String(filters.tags || '')
+      .split(',')
+      .map((value) => value.trim())
+      .filter(Boolean);
+
   const params = new URLSearchParams({
     entityTypeId: String(context.entityTypeId || ''),
     itemId: String(context.itemId || ''),
@@ -47,8 +54,19 @@ function buildReportQuery({ context, filters }) {
     params.set('completionTo', filters.completionTo);
   }
 
-  if (filters.status) {
-    params.set('statuses', filters.status);
+  tags.forEach((tag) => {
+    params.append('tags', tag);
+  });
+
+  const statuses = Array.isArray(filters.statuses)
+    ? filters.statuses.filter(Boolean)
+    : String(filters.statuses || filters.status || '')
+      .split(',')
+      .map((value) => value.trim())
+      .filter(Boolean);
+
+  if (statuses.length > 0) {
+    params.set('statuses', statuses.join(','));
   }
 
   return params;

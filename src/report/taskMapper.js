@@ -20,7 +20,20 @@ function formatDate(value) {
 
 function parseTags(value) {
   if (Array.isArray(value)) {
-    return value.map(String).filter(Boolean);
+    return value
+      .flatMap((item) => parseTags(item))
+      .filter(Boolean);
+  }
+
+  if (value && typeof value === 'object') {
+    const directLabel = readTagLabel(value);
+    if (directLabel) {
+      return [directLabel];
+    }
+
+    return Object.values(value)
+      .flatMap((item) => parseTags(item))
+      .filter(Boolean);
   }
 
   return String(value || '')
@@ -29,8 +42,42 @@ function parseTags(value) {
     .filter(Boolean);
 }
 
+function readTagLabel(value) {
+  return String(
+    value.title ||
+    value.TITLE ||
+    value.name ||
+    value.NAME ||
+    value.label ||
+    value.LABEL ||
+    value.value ||
+    value.VALUE ||
+    '',
+  ).trim();
+}
+
 function buildTaskUrl(portalHost, taskId) {
   return `https://${portalHost}/company/personal/user/0/tasks/task/view/${taskId}/`;
+}
+
+function toTaskFieldKey(fieldCode) {
+  if (!fieldCode) {
+    return '';
+  }
+
+  return String(fieldCode)
+    .toLowerCase()
+    .replace(/_([a-z0-9])/g, function (_, char) {
+      return String(char).toUpperCase();
+    });
+}
+
+function readTaskField(task, fieldCode) {
+  if (!fieldCode) {
+    return '';
+  }
+
+  return task[fieldCode] || task[toTaskFieldKey(fieldCode)] || '';
 }
 
 function mapTaskToRow(task, options) {
@@ -55,7 +102,7 @@ function mapTaskToRow(task, options) {
     spentSeconds,
     plannedText: formatSeconds(plannedSeconds),
     spentText: formatSeconds(spentSeconds),
-    positionName: positionFieldCode ? String(task[positionFieldCode] || '') : '',
+    positionName: String(readTaskField(task, positionFieldCode) || ''),
     tags: parseTags(task.tags),
   };
 }
@@ -72,4 +119,4 @@ function calculateTotals(rows) {
   };
 }
 
-module.exports = { mapTaskToRow, calculateTotals, formatDate, parseTags, buildTaskUrl };
+module.exports = { mapTaskToRow, calculateTotals, formatDate, parseTags, buildTaskUrl, toTaskFieldKey, readTaskField };

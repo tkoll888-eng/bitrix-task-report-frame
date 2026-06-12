@@ -17,7 +17,7 @@ app.get('/api/health', (req, res) => {
   res.json({ success: true, service: 'task-report-frame' });
 });
 
-if (process.env.VIBECODE_API_KEY) {
+if (process.env.VIBECODE_APP_KEY || process.env.VIBECODE_API_KEY) {
   const config = readConfig();
   const client = createVibecodeClient({
     baseUrl: config.vibecodeApiBase,

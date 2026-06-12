@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Печать отчета</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body class="print-page">
+    <main class="page">
+      <section class="report-shell">
+        <header class="toolbar">
+          <div class="filter-group">
+            <div id="reportMeta" class="print-meta"></div>
+          </div>
+          <button id="printNowButton" class="print-button" type="button">Печать</button>
+        </header>
+
+        <div id="tableHost" class="table-wrap"></div>
+      </section>
+    </main>
+
+    <script src="/print.js"></script>
+  </body>
+</html>

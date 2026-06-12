@@ -7,12 +7,11 @@ function buildCompanyReportName(companyName) {
 }
 
 function createTaskSearchBody(entityTypeId, itemId) {
+  const crmBindingCode = `T${Number(entityTypeId).toString(16)}_${Number(itemId)}`;
+
   return {
     filter: {
-      crmBinding: {
-        entityTypeId: Number(entityTypeId),
-        entityId: Number(itemId),
-      },
+      UF_CRM_TASK: crmBindingCode,
     },
     sort: '-changedDate',
     limit: 500,
@@ -20,28 +19,29 @@ function createTaskSearchBody(entityTypeId, itemId) {
 }
 
 function createReportService({ client, config }) {
-  async function resolvePositionFieldCode() {
+  async function resolvePositionFieldCode(requestOptions = {}) {
     if (config.taskPositionFieldCode) {
       return config.taskPositionFieldCode;
     }
 
-    const fields = await client.getTaskFields();
+    const fields = await client.getTaskFields(requestOptions);
     return findFieldCodeByTitle(fields, config.taskPositionFieldName);
   }
 
-  async function buildReport({ entityTypeId, itemId, filters: rawFilters }) {
+  async function buildReport({ entityTypeId, itemId, filters: rawFilters, authorization }) {
     const filters = normalizeFilters(rawFilters);
+    const requestOptions = authorization ? { authorization } : {};
     const [item, positionFieldCode] = await Promise.all([
-      client.getItem(Number(entityTypeId), Number(itemId)),
-      resolvePositionFieldCode(),
+      client.getItem(Number(entityTypeId), Number(itemId), requestOptions),
+      resolvePositionFieldCode(requestOptions),
     ]);
 
     let company = null;
     if (item.companyId) {
-      company = await client.getCompany(item.companyId);
+      company = await client.getCompany(item.companyId, requestOptions);
     }
 
-    const tasks = await client.searchTasks(createTaskSearchBody(entityTypeId, itemId));
+    const tasks = await client.searchTasks(createTaskSearchBody(entityTypeId, itemId), requestOptions);
     const rows = tasks.map((task) => mapTaskToRow(task, {
       portalHost: config.publicPortalHost,
       positionFieldCode,
