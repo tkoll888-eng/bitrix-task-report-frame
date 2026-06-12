@@ -1796,7 +1796,7 @@ main().catch((error) => {
 });
 ```
 
-- [ ] **Step 2: Publish placement after deploy**
+- [x] **Step 2: Publish placement after deploy**
 
 Run after deployment URL is known:
 
