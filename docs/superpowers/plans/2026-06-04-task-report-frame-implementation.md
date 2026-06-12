@@ -1886,7 +1886,7 @@ Expected:
 {"success":true,"service":"task-report-frame"}
 ```
 
-- [ ] **Step 4: Commit deploy script**
+- [x] **Step 4: Commit deploy script**
 
 ```bash
 git add scripts/deploy-vibecode.ps1 .env.example
