@@ -43,6 +43,8 @@
     availableTags: [],
     savedTagSets: readSavedTagSets(),
     isTagFilterOpen: false,
+    sort: { key: '', direction: 'asc' },
+    bitrixReadyPromise: null,
   };
 
   const STATUS_OPTIONS = [
@@ -385,6 +387,132 @@
     }
 
     return params;
+  }
+
+  function getSortValue(row, key) {
+    if (key === 'tags') {
+      return (row.tags || []).join(' / ');
+    }
+
+    if (key === 'plannedSeconds' || key === 'spentSeconds') {
+      return Number(row[key] || 0);
+    }
+
+    return row[key] || '';
+  }
+
+  function compareRows(left, right, key) {
+    const leftValue = getSortValue(left, key);
+    const rightValue = getSortValue(right, key);
+
+    if (typeof leftValue === 'number' || typeof rightValue === 'number') {
+      return Number(leftValue || 0) - Number(rightValue || 0);
+    }
+
+    return String(leftValue || '').localeCompare(String(rightValue || ''), 'ru', {
+      numeric: true,
+      sensitivity: 'base',
+    });
+  }
+
+  function getSortedRows(rows) {
+    if (!state.sort.key) {
+      return rows.slice();
+    }
+
+    const direction = state.sort.direction === 'desc' ? -1 : 1;
+    return rows.slice().sort(function (left, right) {
+      return compareRows(left, right, state.sort.key) * direction;
+    });
+  }
+
+  function syncSortButtons() {
+    document.querySelectorAll('[data-sort-key]').forEach(function (button) {
+      const isActive = button.getAttribute('data-sort-key') === state.sort.key;
+      button.classList.toggle('is-active', isActive);
+      button.setAttribute('aria-sort', isActive ? state.sort.direction : 'none');
+      button.setAttribute('data-sort-direction', isActive ? state.sort.direction : '');
+    });
+  }
+
+  function getTaskPath(titleUrl) {
+    try {
+      return new URL(titleUrl, window.location.origin).pathname;
+    } catch (error) {
+      return '';
+    }
+  }
+
+  function navigateToTask(titleUrl) {
+    window.location.href = titleUrl;
+  }
+
+  function ensureBitrixReady() {
+    const bx24 = window.BX24;
+    if (!bx24 || typeof bx24.openPath !== 'function') {
+      return Promise.resolve(null);
+    }
+
+    if (typeof bx24.isReady === 'function' && bx24.isReady()) {
+      return Promise.resolve(bx24);
+    }
+
+    if (state.bitrixReadyPromise) {
+      return state.bitrixReadyPromise;
+    }
+
+    if (typeof bx24.init !== 'function') {
+      return Promise.resolve(bx24);
+    }
+
+    state.bitrixReadyPromise = new Promise(function (resolve) {
+      let resolved = false;
+      const finish = function () {
+        if (resolved) {
+          return;
+        }
+
+        resolved = true;
+        resolve(bx24);
+      };
+
+      try {
+        bx24.init(finish);
+      } catch (error) {
+        resolve(null);
+        return;
+      }
+
+      window.setTimeout(finish, 1500);
+    });
+
+    return state.bitrixReadyPromise;
+  }
+
+  function openTask(row, event) {
+    if (!row.titleUrl || row.titleUrl === '#') {
+      return;
+    }
+
+    event.preventDefault();
+    const path = getTaskPath(row.titleUrl);
+
+    ensureBitrixReady().then(function (bx24) {
+      if (!bx24 || !path || typeof bx24.openPath !== 'function') {
+        navigateToTask(row.titleUrl);
+        return;
+      }
+
+      try {
+        bx24.openPath(path, function () {
+          loadReport();
+        });
+      } catch (error) {
+        navigateToTask(row.titleUrl);
+      }
+    }).catch(function () {
+      navigateToTask(row.titleUrl);
+    });
   }
 
   function getStatusTone(status) {
@@ -806,6 +934,27 @@
     });
   }
 
+  function bindSorting() {
+    document.querySelectorAll('[data-sort-key]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        const key = button.getAttribute('data-sort-key');
+        if (state.sort.key === key) {
+          state.sort.direction = state.sort.direction === 'asc' ? 'desc' : 'asc';
+        } else {
+          state.sort = { key, direction: 'asc' };
+        }
+
+        if (state.report) {
+          renderReport(state.report);
+        } else {
+          syncSortButtons();
+        }
+      });
+    });
+
+    syncSortButtons();
+  }
+
   function renderReport(report) {
     state.report = report;
     renderPrintMeta(report);
@@ -816,7 +965,7 @@
     const rowsRoot = document.getElementById('report-rows');
     rowsRoot.innerHTML = '';
 
-    report.rows.forEach(function (row) {
+    getSortedRows(report.rows || []).forEach(function (row) {
       const tr = document.createElement('tr');
 
       const createdAt = document.createElement('td');
@@ -832,9 +981,10 @@
       const link = document.createElement('a');
       link.className = 'task-link';
       link.href = row.titleUrl || '#';
-      link.target = '_blank';
-      link.rel = 'noopener';
       link.textContent = row.title || '';
+      link.addEventListener('click', function (event) {
+        openTask(row, event);
+      });
       titleCell.appendChild(link);
       tr.appendChild(titleCell);
 
@@ -868,6 +1018,8 @@
 
       rowsRoot.appendChild(tr);
     });
+
+    syncSortButtons();
   }
 
   async function loadReport() {
@@ -916,6 +1068,7 @@
   bindFiltersForm();
   bindStatusPicker();
   bindTagFilter();
+  bindSorting();
   renderTagFilter();
   loadReport();
 })();

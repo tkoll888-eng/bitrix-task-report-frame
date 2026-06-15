@@ -434,6 +434,39 @@ th {
   line-height: 1.1;
 }
 
+.sort-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+
+.sort-button::after {
+  content: "";
+  color: #356dff;
+  font-size: 10px;
+  line-height: 1;
+}
+
+.sort-button.is-active[data-sort-direction="asc"]::after {
+  content: "▲";
+}
+
+.sort-button.is-active[data-sort-direction="desc"]::after {
+  content: "▼";
+}
+
+.sort-button:hover {
+  color: var(--link);
+}
+
 td {
   background: #fff;
 }
@@ -623,12 +656,49 @@ td {
 
 .print-page table {
   min-width: 0;
+  table-layout: auto;
 }
 
 .print-page th,
 .print-page td {
   padding: 6px 8px;
   font-size: 12px;
+  vertical-align: top;
+}
+
+.print-page th {
+  white-space: nowrap;
+}
+
+.print-page .title-cell {
+  width: 100%;
+  white-space: normal;
+  word-break: break-word;
+}
+
+.print-page .numeric,
+.print-page td:not(.title-cell):not(.tags-cell) {
+  white-space: nowrap;
+  width: 1%;
+}
+
+.print-page .tags-cell {
+  width: 1%;
+  white-space: normal;
+}
+
+.print-page .tags-list {
+  gap: 2px 4px;
+}
+
+.print-page .tag-chip {
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font-size: 7.5pt;
+  line-height: 1.2;
 }
 
 @page {
@@ -682,7 +752,7 @@ td {
   table {
     width: 100%;
     min-width: 0;
-    table-layout: fixed;
+    table-layout: auto;
     font-size: 8pt;
   }
 
@@ -697,8 +767,21 @@ td {
   }
 
   .title-cell {
-    width: 34%;
+    width: auto;
     min-width: 0;
+    white-space: normal;
+    word-break: break-word;
+  }
+
+  .numeric,
+  td:not(.title-cell):not(.tags-cell) {
+    white-space: nowrap;
+    width: 1%;
+  }
+
+  .tags-cell {
+    width: 1%;
+    white-space: normal;
   }
 
   .task-link {
@@ -708,6 +791,7 @@ td {
 
   .tags-list {
     display: block;
+    gap: 0;
   }
 
   .tag-chip {
@@ -716,6 +800,7 @@ td {
     padding: 0;
     color: inherit;
     font-size: 7.5pt;
+    line-height: 1.2;
   }
 
   .tag-chip + .tag-chip::before {

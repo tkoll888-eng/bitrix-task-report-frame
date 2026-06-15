@@ -34,9 +34,9 @@ test('normalizeFilters applies current month default', () => {
   assert.equal(filters.periodPreset, 'currentMonth');
   assert.equal(filters.periodFrom, '2026-06-01');
   assert.equal(filters.periodTo, '2026-06-30');
-  assert.equal(filters.completionPreset, 'currentMonth');
-  assert.equal(filters.completionFrom, '2026-06-01');
-  assert.equal(filters.completionTo, '2026-06-30');
+  assert.equal(filters.completionPreset, 'allTime');
+  assert.equal(filters.completionFrom, '');
+  assert.equal(filters.completionTo, '');
   assert.deepEqual(filters.statuses, []);
 });
 

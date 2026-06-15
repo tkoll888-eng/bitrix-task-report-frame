@@ -1932,7 +1932,8 @@ Expected:
 - Task title links open Bitrix24 task cards.
 - Status filter allows several statuses at once.
 - Totals match visible rows.
-- Print layout opens from the current frame with the same loaded data and filters.
+- Print layout runs from the current frame with the same loaded data and filters.
+- UI shell tests should assert frame behavior rather than exact SDK variable spelling: print uses `window.print()`, no new `/print.html` tab is opened, task links use the available `window.BX24` SDK with `openPath` when embedded, and same-window navigation remains as the local fallback.
 
 - [ ] **Step 2: Deployed frame verification**
 

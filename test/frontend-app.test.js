@@ -93,6 +93,15 @@ test('buildReportQuery preserves commas inside selected tag titles', () => {
   assert.deepEqual(params.getAll('tags'), ['Setup, phase 1', 'Dev']);
 });
 
+test('buildReportQuery defaults completion date filter to all time', () => {
+  const params = buildReportQuery({
+    context: { entityTypeId: '184', itemId: '123' },
+    filters: {},
+  });
+
+  assert.equal(params.get('completionPreset'), 'allTime');
+});
+
 test('parseReportResponseText returns friendly message for html response', () => {
   const result = parseReportResponseText({
     ok: false,

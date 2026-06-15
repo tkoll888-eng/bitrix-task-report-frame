@@ -62,8 +62,8 @@
                   <span class="range-inline" data-range-inline="completion"></span>
                 </span>
                 <select id="completionPreset" data-range-toggle="completion">
-                  <option value="allTime">Не учитывать</option>
-                  <option value="currentMonth" selected>Текущий месяц</option>
+                  <option value="allTime" selected>Не учитывать</option>
+                  <option value="currentMonth">Текущий месяц</option>
                   <option value="previousMonth">Прошлый месяц</option>
                   <option value="currentWeek">Текущая неделя</option>
                   <option value="previousWeek">Прошлая неделя</option>
@@ -121,14 +121,14 @@
           <table>
             <thead>
               <tr>
-                <th>Дата создания</th>
-                <th>Статус</th>
-                <th>Название</th>
-                <th>План</th>
-                <th>Факт</th>
-                <th>Дата завершения</th>
-                <th>Крайний срок</th>
-                <th>Теги</th>
+                <th><button type="button" class="sort-button" data-sort-key="createdDate">Дата создания</button></th>
+                <th><button type="button" class="sort-button" data-sort-key="statusLabel">Статус</button></th>
+                <th><button type="button" class="sort-button" data-sort-key="title">Название</button></th>
+                <th><button type="button" class="sort-button" data-sort-key="plannedSeconds">План</button></th>
+                <th><button type="button" class="sort-button" data-sort-key="spentSeconds">Факт</button></th>
+                <th><button type="button" class="sort-button" data-sort-key="closedDate">Дата завершения</button></th>
+                <th><button type="button" class="sort-button" data-sort-key="deadline">Крайний срок</button></th>
+                <th><button type="button" class="sort-button" data-sort-key="tags">Теги</button></th>
               </tr>
             </thead>
             <tbody id="report-rows"></tbody>
@@ -152,6 +152,7 @@
       </section>
     </main>
 
+    <script src="https://api.bitrix24.com/api/v1/"></script>
     <script src="/app.js"></script>
   </body>
 </html>

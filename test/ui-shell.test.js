@@ -69,6 +69,9 @@ test('GET / returns compact preview report shell', async () => {
   assert.match(response.text, /Плановые трудозатраты/);
   assert.match(response.text, /Затраченное время/);
   assert.match(response.text, /Количество задач/);
+  assert.match(response.text, /value="allTime" selected>Не учитывать/);
+  assert.match(response.text, /data-sort-key="title"/);
+  assert.match(response.text, /data-sort-key="spentSeconds"/);
   assert.doesNotMatch(response.text, /Наим\./);
   assert.doesNotMatch(response.text, /Наименование позиции/);
   assert.doesNotMatch(response.text, /Задач:/);
@@ -90,11 +93,16 @@ test('GET /print.html returns print shell', async () => {
   assert.doesNotMatch(response.text, /Наименование позиции/);
 });
 
-test('print button prints inside current frame without opening a new tab', () => {
+test('frame actions stay inside the embedded Bitrix24 frame with local fallbacks', () => {
   const appJs = fs.readFileSync(path.join(__dirname, '..', 'public', 'app.js'), 'utf8');
   const styles = fs.readFileSync(path.join(__dirname, '..', 'public', 'styles.css'), 'utf8');
 
   assert.match(appJs, /window\.print\(\)/);
   assert.doesNotMatch(appJs, /window\.open\(`\/print\.html/);
+  assert.doesNotMatch(appJs, /target = '_blank'/);
+  assert.match(appJs, /window\.BX24/);
+  assert.match(appJs, /\.openPath\(/);
+  assert.match(appJs, /\.init\(/);
+  assert.match(appJs, /window\.location\.href/);
   assert.match(styles, /size:\s*A4 portrait/);
 });

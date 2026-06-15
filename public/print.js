@@ -57,12 +57,12 @@
         <tr>
           <td>${escapeHtml(row.createdDateText)}</td>
           <td>${escapeHtml(row.statusLabel)}</td>
-          <td>${escapeHtml(row.title)}</td>
+          <td class="title-cell">${escapeHtml(row.title)}</td>
           <td class="numeric">${escapeHtml(row.plannedText)}</td>
           <td class="numeric spent">${escapeHtml(row.spentText)}</td>
           <td>${escapeHtml(row.closedDateText || '—')}</td>
           <td>${escapeHtml(row.deadlineText || '—')}</td>
-          <td>${escapeHtml((row.tags || []).join(' / '))}</td>
+          <td class="tags-cell">${escapeHtml((row.tags || []).join(' / '))}</td>
         </tr>
       `;
     }).join('');

@@ -75,7 +75,9 @@ The table contains these columns:
 - `Крайний срок`
 - `Теги`
 
-`Название` is a required clickable link to the task in Bitrix24. Opening the link should take the user to the task card.
+`Название` is a required clickable link to the task in Bitrix24. Inside Bitrix24, opening the link uses the available SDK object `window.BX24` and its `openPath` method so the task opens in the standard Bitrix24 slider over the current smart-process item. After the user closes the task slider, they remain in the original item card and report frame. In local development, where `window.BX24` is unavailable, the link can fall back to regular same-window navigation.
+
+The table supports sorting by clicking column headers. Each click sorts the current loaded result set by the selected column; repeated clicks on the same column toggle ascending and descending order. Sorting is client-side and does not change the active filters or totals.
 
 ## Filters
 
@@ -166,7 +168,7 @@ Saved set behavior:
 
 `Дата завершения` uses the same interaction pattern as `Период`.
 
-The default value is `Текущий месяц`.
+The default value is `Не учитывать`.
 
 `Дата завершения` supports:
 
@@ -296,8 +298,11 @@ Before deployment:
 - Verify live tag suggestions populated from Bitrix24 data.
 - Verify unique saved tag sets are stored and available for quick reuse.
 - Verify completion date quick filters and manual date range.
+- Verify completion date defaults to `Не учитывать`.
 - Verify status filter labels map correctly to Bitrix24 statuses.
 - Verify several statuses can be selected at the same time.
+- Verify table headers sort visible rows and toggle direction on repeated clicks.
+- Verify task title links open task cards through the Bitrix24 slider and return to the current smart-process item after closing.
 - Verify the compact totals strip.
 - Verify HTML print layout with the same applied filters.
 - Verify the main frame view does not show the object/company/period context block.

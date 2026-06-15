@@ -36,7 +36,7 @@ function buildReportQuery({ context, filters }) {
     itemId: String(context.itemId || ''),
     periodPreset: filters.periodPreset || 'currentMonth',
     tagContains: filters.tagContains || '',
-    completionPreset: filters.completionPreset || 'currentMonth',
+    completionPreset: filters.completionPreset || 'allTime',
   });
 
   if (filters.periodFrom) {
