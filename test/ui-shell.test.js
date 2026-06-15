@@ -77,7 +77,6 @@ test('GET / returns compact preview report shell', async () => {
   assert.match(response.text, /data-sort-key="title"/);
   assert.match(response.text, /data-sort-key="spentSeconds"/);
   assert.match(response.text, /id="pagination"/);
-  assert.match(response.text, /id="frameDiagnostics"/);
   assert.match(response.text, /id="pageSizeSelect"/);
   assert.match(response.text, /value="20" selected/);
   assert.match(response.text, /value="30"/);
@@ -103,33 +102,30 @@ test('GET /print.html returns print shell', async () => {
   assert.doesNotMatch(response.text, /Наименование позиции/);
 });
 
-test('frame actions stay inside the embedded Bitrix24 frame with local fallbacks', () => {
+test('frame actions keep the report embedded and open task links in a safe tab', () => {
   const appJs = fs.readFileSync(path.join(__dirname, '..', 'public', 'app.js'), 'utf8');
   const styles = fs.readFileSync(path.join(__dirname, '..', 'public', 'styles.css'), 'utf8');
 
   assert.match(appJs, /window\.print\(\)/);
   assert.doesNotMatch(appJs, /window\.open\(`\/print\.html/);
   assert.match(appJs, /window\.BX24/);
-  assert.match(appJs, /\.init\(/);
-  assert.match(appJs, /bx24\.openPath/);
   assert.match(appJs, /resizeWindow/);
-  assert.match(appJs, /fitWindow/);
   assert.match(appJs, /FRAME_RESIZE_RETRY_LIMIT/);
   assert.match(appJs, /FRAME_RESIZE_PADDING/);
-  assert.match(appJs, /showFrameDiagnostics/);
-  assert.match(appJs, /Resize:/);
-  assert.match(appJs, /fit=/);
-  assert.match(appJs, /sent=/);
-  assert.match(styles, /\.frame-diagnostics/);
   assert.match(appJs, /scheduleFrameResize\(attempt \+ 1\)/);
-  assert.doesNotMatch(appJs, /link\.target = '_blank'/);
-  assert.doesNotMatch(appJs, /link\.rel = 'noopener noreferrer'/);
-  assert.match(appJs, /link\.addEventListener\('click'/);
-  assert.match(appJs, /openTask\(row, event\)/);
-  assert.match(appJs, /event\.preventDefault\(\)/);
-  assert.match(appJs, /navigateToTask\(row\.titleUrl\)/);
-  assert.match(appJs, /bx24\.openPath\(path\)/);
+  assert.match(appJs, /link\.target = '_blank'/);
+  assert.match(appJs, /link\.rel = 'noopener noreferrer'/);
+  assert.doesNotMatch(appJs, /link\.addEventListener\('click'/);
+  assert.doesNotMatch(appJs, /openTask\(row, event\)/);
+  assert.doesNotMatch(appJs, /navigateToTask\(row\.titleUrl\)/);
+  assert.doesNotMatch(appJs, /bx24\.openPath\(path\)/);
   assert.doesNotMatch(appJs, /Bitrix SDK:/);
+  assert.doesNotMatch(appJs, /frameDiagnostics/);
+  assert.doesNotMatch(appJs, /showFrameDiagnostics/);
+  assert.doesNotMatch(appJs, /Resize:/);
+  assert.doesNotMatch(appJs, /fit=/);
+  assert.doesNotMatch(appJs, /sent=/);
+  assert.doesNotMatch(styles, /\.frame-diagnostics/);
   assert.match(styles, /\.task-link[\s\S]*color:\s*var\(--link\)/);
   assert.match(styles, /\.task-link[\s\S]*cursor:\s*pointer/);
   assert.match(styles, /size:\s*A4 portrait/);

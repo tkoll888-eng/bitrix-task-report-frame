@@ -48,7 +48,6 @@
     isTagFilterOpen: false,
     sort: { key: '', direction: 'asc' },
     pagination: { page: 1, pageSize: 20 },
-    bitrixReadyPromise: null,
   };
 
   const STATUS_OPTIONS = [
@@ -350,29 +349,6 @@
     };
   }
 
-  function showFrameDiagnostics(text) {
-    const node = document.getElementById('frameDiagnostics');
-    if (!node) {
-      return;
-    }
-
-    node.hidden = !text;
-    node.textContent = text || '';
-  }
-
-  function formatFrameDiagnostics(status, attempt, metrics, width, height, fitStatus) {
-    const sentSize = width && height ? `; sent=${width}x${height}` : '';
-    const fitText = fitStatus ? `; fit=${fitStatus}` : '';
-    return [
-      `Resize: sdk=${status}`,
-      `attempt=${attempt}`,
-      `body=${metrics.bodyHeight}`,
-      `doc=${metrics.docHeight}`,
-      `inner=${metrics.innerHeight}`,
-      `widths=${metrics.bodyWidth}/${metrics.docWidth}/${metrics.innerWidth}${sentSize}${fitText}`,
-    ].join('; ');
-  }
-
   function getSelectedStatuses() {
     return Array.from(document.querySelectorAll('input[name="statusFilter"]:checked')).map(
       function (input) {
@@ -498,36 +474,9 @@
     });
   }
 
-  function getTaskPath(titleUrl) {
-    try {
-      const url = new URL(titleUrl, window.location.origin);
-      return url.pathname + url.search + url.hash;
-    } catch (error) {
-      return '';
-    }
-  }
-
-  async function navigateToTask(titleUrl) {
-    const bx24 = await ensureBitrixReady();
-    const path = getTaskPath(titleUrl);
-
-    if (bx24 && path && typeof bx24.openPath === 'function') {
-      try {
-        bx24.openPath(path);
-        return;
-      } catch (error) {
-        // Fall through to the visible error; links must not leave the frame.
-      }
-    }
-
-    showMessage('Не удалось открыть задачу внутри Bitrix24 frame.', 'error');
-  }
-
   function scheduleFrameResize(attempt = 0) {
     const bx24 = window.BX24;
     if (!bx24 || typeof bx24.resizeWindow !== 'function') {
-      showFrameDiagnostics(formatFrameDiagnostics('not-ready', attempt, getFrameResizeMetrics()));
-
       if (attempt < FRAME_RESIZE_RETRY_LIMIT) {
         window.setTimeout(function () {
           scheduleFrameResize(attempt + 1);
@@ -541,77 +490,13 @@
       const height = Math.max(metrics.bodyHeight, metrics.docHeight, metrics.innerHeight)
         + FRAME_RESIZE_PADDING;
       const width = Math.max(metrics.bodyWidth, metrics.docWidth, metrics.innerWidth);
-      const hasFitWindow = typeof bx24.fitWindow === 'function';
-
-      showFrameDiagnostics(formatFrameDiagnostics(
-        'ready',
-        attempt,
-        metrics,
-        width,
-        height,
-        hasFitWindow ? 'yes' : 'no',
-      ));
 
       try {
         bx24.resizeWindow(width, height);
-        if (hasFitWindow) {
-          bx24.fitWindow();
-        }
       } catch (error) {
         // Frame resizing is best-effort; the report should remain usable locally.
       }
     }, 0);
-  }
-
-  function ensureBitrixReady() {
-    const bx24 = window.BX24;
-    if (!bx24 || typeof bx24.openPath !== 'function') {
-      return Promise.resolve(null);
-    }
-
-    if (typeof bx24.isReady === 'function' && bx24.isReady()) {
-      return Promise.resolve(bx24);
-    }
-
-    if (state.bitrixReadyPromise) {
-      return state.bitrixReadyPromise;
-    }
-
-    if (typeof bx24.init !== 'function') {
-      return Promise.resolve(bx24);
-    }
-
-    state.bitrixReadyPromise = new Promise(function (resolve) {
-      let resolved = false;
-      const finish = function () {
-        if (resolved) {
-          return;
-        }
-
-        resolved = true;
-        resolve(bx24);
-      };
-
-      try {
-        bx24.init(finish);
-      } catch (error) {
-        resolve(null);
-        return;
-      }
-
-      window.setTimeout(finish, 1500);
-    });
-
-    return state.bitrixReadyPromise;
-  }
-
-  function openTask(row, event) {
-    if (!row.titleUrl || row.titleUrl === '#') {
-      return;
-    }
-
-    event.preventDefault();
-    navigateToTask(row.titleUrl).catch(function () {});
   }
 
   function getStatusTone(status) {
@@ -1150,10 +1035,9 @@
       const link = document.createElement('a');
       link.className = 'task-link';
       link.href = row.titleUrl || '#';
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
       link.textContent = row.title || '';
-      link.addEventListener('click', function (event) {
-        openTask(row, event);
-      });
       titleCell.appendChild(link);
       tr.appendChild(titleCell);
 
@@ -1250,7 +1134,9 @@
   bindSorting();
   bindPagination();
   renderTagFilter();
-  window.addEventListener('resize', scheduleFrameResize);
+  window.addEventListener('resize', function () {
+    scheduleFrameResize();
+  });
   loadReport();
 })();
 

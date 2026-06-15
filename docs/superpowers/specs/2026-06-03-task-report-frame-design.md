@@ -68,6 +68,8 @@ The frame must use the full available height of the smart-process tab area. The 
 
 Because the Bitrix24 SDK is loaded asynchronously, resizing cannot be a one-shot action. If `window.BX24.resizeWindow` is not available on the first attempt, the app retries resizing several times after the report loads. The requested height is based on the document's full `scrollHeight` plus a small padding so the bottom of the table, pagination, and totals are not hidden inside the frame work area.
 
+Visible resize diagnostics, test strings, and the experimental `BX24.fitWindow` call must not appear in the production UI. Testing showed that Bitrix24/VibeCode may still cap the actual tab area height regardless of the requested `resizeWindow`; in that case the app keeps best-effort resizing and does not show a user-facing debug block.
+
 The main frame view does not show:
 
 - A separate page title such as `Отчет по задачам`.
@@ -88,9 +90,9 @@ The table contains these columns:
 - `Крайний срок`
 - `Теги`
 
-`Название` is a required clickable link to the task in Bitrix24. Inside Bitrix24, the link must open the task through the available SDK object `window.BX24` and its `openPath` method so the task opens in the standard Bitrix24 slider over the current smart-process item. After the user closes the task slider, they remain in the original item card and report frame. If SDK opening does not work in embedded Bitrix24 mode, that is a behavior error rather than an acceptable fallback. Only local development mode, where `window.BX24` is unavailable from the start, may use regular same-window navigation.
+`Название` is a required clickable link to the task in Bitrix24. The desired product behavior is to open the standard task card inside the current Bitrix24 frame/slider so the user returns to the same smart-process item and report frame after closing it.
 
-The visible task link `href` should remain the regular working task URL `/company/personal/user/{responsibleId}/tasks/task/view/{taskId}/` when the task payload contains a real `responsibleId`. For embedded SDK opening, build a separate frame URL `/company/personal/user/{responsibleId}/tasks/task/view/{taskId}/?IFRAME=Y&IFRAME_TYPE=SIDE_SLIDER#`. Do not use `user/0` as the primary embedded-opening URL: the regular portal page can redirect it, but `BX24.openPath` validates supported paths more strictly. When calling `BX24.openPath`, pass the path with the `IFRAME` query parameters and trailing hash `#`, not only `pathname`. If `BX24.openPath` invokes its callback with `result: "error"` and `errorCode`, the app shows that code to the user as an embedded-opening error.
+The current verified production behavior is a regular task URL `/company/personal/user/{responsibleId}/tasks/task/view/{taskId}/` opened in a new browser tab with `target="_blank"` and `rel="noopener noreferrer"`. Attempts to open task URLs through `window.BX24.openPath`, `IFRAME=Y&IFRAME_TYPE=SIDE_SLIDER#`, and direct iframe navigation were not stable: `openPath` did not open the task card, and direct iframe navigation was blocked by `auth2.bitrix24.net`. Embedded task opening therefore remains a separate unresolved platform issue/bug and is not part of the current deployment behavior.
 
 The table supports sorting by clicking column headers. Each click sorts the current loaded result set by the selected column; repeated clicks on the same column toggle ascending and descending order. Sorting is client-side and does not change the active filters or totals.
 
@@ -337,8 +339,8 @@ Before deployment:
 - Verify status filter labels map correctly to Bitrix24 statuses.
 - Verify several statuses can be selected at the same time.
 - Verify table headers sort visible rows and toggle direction on repeated clicks.
-- Verify task title links open task cards through the Bitrix24 slider and return to the current smart-process item after closing.
-- Verify a failure of embedded `window.BX24.openPath` opening in Bitrix24 mode is treated as an error rather than a silent fallback to regular navigation.
+- Verify task title links open the regular Bitrix24 task card in a new tab without breaking the current report frame.
+- Embedded task opening inside the current Bitrix24 frame/slider remains an unresolved platform issue; do not mark it implemented without a separate confirmed Bitrix24 check.
 - Verify the compact totals strip.
 - Verify HTML print layout with the same applied filters.
 - Verify the main frame view does not show the object/company/period context block.
