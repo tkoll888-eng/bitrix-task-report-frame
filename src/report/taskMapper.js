@@ -56,8 +56,27 @@ function readTagLabel(value) {
   ).trim();
 }
 
-function buildTaskUrl(portalHost, taskId) {
-  return `https://${portalHost}/company/personal/user/0/tasks/task/view/${taskId}/`;
+function readTaskUserId(task) {
+  const candidate = task.responsibleId ||
+    task.responsible?.id ||
+    task.responsible?.ID ||
+    task.RESPONSIBLE_ID ||
+    task.responsible_id ||
+    0;
+  const userId = Number(candidate);
+  return Number.isFinite(userId) && userId > 0 ? userId : 0;
+}
+
+function buildTaskUrl(portalHost, taskId, userId = 0) {
+  return `https://${portalHost}/company/personal/user/${userId}/tasks/task/view/${taskId}/`;
+}
+
+function buildTaskFrameUrl(portalHost, taskId, userId = 0) {
+  const url = new URL(`https://${portalHost}/company/personal/user/${userId}/tasks/task/view/${taskId}/`);
+  url.searchParams.set('IFRAME', 'Y');
+  url.searchParams.set('IFRAME_TYPE', 'SIDE_SLIDER');
+  url.hash = '#';
+  return url.toString();
 }
 
 function toTaskFieldKey(fieldCode) {
@@ -88,7 +107,8 @@ function mapTaskToRow(task, options) {
   return {
     id: Number(task.id),
     title: task.title || '',
-    titleUrl: buildTaskUrl(options.portalHost, task.id),
+    titleUrl: buildTaskUrl(options.portalHost, task.id, readTaskUserId(task)),
+    titleFrameUrl: buildTaskFrameUrl(options.portalHost, task.id, readTaskUserId(task)),
     status: Number(task.status || 0),
     statusLabel: getStatusLabel(task.status),
     createdDate: task.createdDate || '',
@@ -119,4 +139,4 @@ function calculateTotals(rows) {
   };
 }
 
-module.exports = { mapTaskToRow, calculateTotals, formatDate, parseTags, buildTaskUrl, toTaskFieldKey, readTaskField };
+module.exports = { mapTaskToRow, calculateTotals, formatDate, parseTags, buildTaskUrl, buildTaskFrameUrl, readTaskUserId, toTaskFieldKey, readTaskField };

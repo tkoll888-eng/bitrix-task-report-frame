@@ -1,7 +1,10 @@
-(function () {
+﻿(function () {
   const STORAGE_KEY = 'taskReportSavedTagSets';
   const QUICK_TAG_SET_LIMIT = 5;
   const SUGGESTION_LIMIT = 8;
+  const PAGE_SIZE_OPTIONS = [20, 30, 50];
+  const FRAME_RESIZE_RETRY_LIMIT = 20;
+  const FRAME_RESIZE_PADDING = 32;
 
   const previewReport = {
     totals: {
@@ -44,6 +47,7 @@
     savedTagSets: readSavedTagSets(),
     isTagFilterOpen: false,
     sort: { key: '', direction: 'asc' },
+    pagination: { page: 1, pageSize: 20 },
     bitrixReadyPromise: null,
   };
 
@@ -335,6 +339,40 @@
     node.className = tone === 'error' ? 'message is-error' : 'message';
   }
 
+  function getFrameResizeMetrics() {
+    return {
+      bodyHeight: document.body.scrollHeight,
+      docHeight: document.documentElement.scrollHeight,
+      innerHeight: window.innerHeight,
+      bodyWidth: document.body.scrollWidth,
+      docWidth: document.documentElement.scrollWidth,
+      innerWidth: window.innerWidth,
+    };
+  }
+
+  function showFrameDiagnostics(text) {
+    const node = document.getElementById('frameDiagnostics');
+    if (!node) {
+      return;
+    }
+
+    node.hidden = !text;
+    node.textContent = text || '';
+  }
+
+  function formatFrameDiagnostics(status, attempt, metrics, width, height, fitStatus) {
+    const sentSize = width && height ? `; sent=${width}x${height}` : '';
+    const fitText = fitStatus ? `; fit=${fitStatus}` : '';
+    return [
+      `Resize: sdk=${status}`,
+      `attempt=${attempt}`,
+      `body=${metrics.bodyHeight}`,
+      `doc=${metrics.docHeight}`,
+      `inner=${metrics.innerHeight}`,
+      `widths=${metrics.bodyWidth}/${metrics.docWidth}/${metrics.innerWidth}${sentSize}${fitText}`,
+    ].join('; ');
+  }
+
   function getSelectedStatuses() {
     return Array.from(document.querySelectorAll('input[name="statusFilter"]:checked')).map(
       function (input) {
@@ -426,6 +464,31 @@
     });
   }
 
+  function normalizePageSize(value) {
+    const pageSize = Number(value);
+    return PAGE_SIZE_OPTIONS.includes(pageSize) ? pageSize : 20;
+  }
+
+  function getPagination(totalRows) {
+    const pageSize = normalizePageSize(state.pagination.pageSize);
+    const totalPages = Math.max(1, Math.ceil(totalRows / pageSize));
+    const page = Math.min(Math.max(1, state.pagination.page), totalPages);
+    state.pagination.page = page;
+    state.pagination.pageSize = pageSize;
+
+    const startIndex = (page - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+
+    return { page, pageSize, totalPages, startIndex, endIndex };
+  }
+
+  function getPaginatedRows(rows) {
+    const pagination = getPagination(rows.length);
+    const startIndex = pagination.startIndex;
+    const endIndex = pagination.endIndex;
+    return rows.slice(startIndex, endIndex);
+  }
+
   function syncSortButtons() {
     document.querySelectorAll('[data-sort-key]').forEach(function (button) {
       const isActive = button.getAttribute('data-sort-key') === state.sort.key;
@@ -437,36 +500,63 @@
 
   function getTaskPath(titleUrl) {
     try {
-      return new URL(titleUrl, window.location.origin).pathname;
+      const url = new URL(titleUrl, window.location.origin);
+      return url.pathname + url.search + url.hash;
     } catch (error) {
       return '';
     }
   }
 
-  function navigateToTask(titleUrl) {
-    window.location.href = titleUrl;
+  async function navigateToTask(titleUrl) {
+    const bx24 = await ensureBitrixReady();
+    const path = getTaskPath(titleUrl);
+
+    if (bx24 && path && typeof bx24.openPath === 'function') {
+      try {
+        bx24.openPath(path);
+        return;
+      } catch (error) {
+        // Fall through to the visible error; links must not leave the frame.
+      }
+    }
+
+    showMessage('Не удалось открыть задачу внутри Bitrix24 frame.', 'error');
   }
 
-  function scheduleFrameResize() {
+  function scheduleFrameResize(attempt = 0) {
     const bx24 = window.BX24;
     if (!bx24 || typeof bx24.resizeWindow !== 'function') {
+      showFrameDiagnostics(formatFrameDiagnostics('not-ready', attempt, getFrameResizeMetrics()));
+
+      if (attempt < FRAME_RESIZE_RETRY_LIMIT) {
+        window.setTimeout(function () {
+          scheduleFrameResize(attempt + 1);
+        }, 250);
+      }
       return;
     }
 
     window.setTimeout(function () {
-      const height = Math.max(
-        document.body.scrollHeight,
-        document.documentElement.scrollHeight,
-        window.innerHeight,
-      );
-      const width = Math.max(
-        document.body.scrollWidth,
-        document.documentElement.scrollWidth,
-        window.innerWidth,
-      );
+      const metrics = getFrameResizeMetrics();
+      const height = Math.max(metrics.bodyHeight, metrics.docHeight, metrics.innerHeight)
+        + FRAME_RESIZE_PADDING;
+      const width = Math.max(metrics.bodyWidth, metrics.docWidth, metrics.innerWidth);
+      const hasFitWindow = typeof bx24.fitWindow === 'function';
+
+      showFrameDiagnostics(formatFrameDiagnostics(
+        'ready',
+        attempt,
+        metrics,
+        width,
+        height,
+        hasFitWindow ? 'yes' : 'no',
+      ));
 
       try {
         bx24.resizeWindow(width, height);
+        if (hasFitWindow) {
+          bx24.fitWindow();
+        }
       } catch (error) {
         // Frame resizing is best-effort; the report should remain usable locally.
       }
@@ -521,35 +611,7 @@
     }
 
     event.preventDefault();
-    const path = getTaskPath(row.titleUrl);
-    const hasBitrixSdk = Boolean(window.BX24);
-
-    ensureBitrixReady().then(function (bx24) {
-      if (!bx24 || !path || typeof bx24.openPath !== 'function') {
-        if (hasBitrixSdk) {
-          showMessage('Не удалось открыть задачу через window.BX24.openPath.', 'error');
-          return;
-        }
-
-        navigateToTask(row.titleUrl);
-        return;
-      }
-
-      try {
-        bx24.openPath(path, function () {
-          loadReport();
-        });
-      } catch (error) {
-        showMessage('Не удалось открыть задачу через window.BX24.openPath.', 'error');
-      }
-    }).catch(function () {
-      if (hasBitrixSdk) {
-        showMessage('Не удалось открыть задачу через window.BX24.openPath.', 'error');
-        return;
-      }
-
-      navigateToTask(row.titleUrl);
-    });
+    navigateToTask(row.titleUrl).catch(function () {});
   }
 
   function getStatusTone(status) {
@@ -764,7 +826,7 @@
     clearTagSearch();
     state.isTagFilterOpen = true;
     renderTagFilter();
-    loadReport();
+    loadReportFromFirstPage();
   }
 
   function removeSelectedTag(tag) {
@@ -772,7 +834,7 @@
       return selectedTag.toLowerCase() !== String(tag).toLowerCase();
     });
     renderTagFilter();
-    loadReport();
+    loadReportFromFirstPage();
   }
 
   function applySavedTagSet(tagSet) {
@@ -780,7 +842,7 @@
     clearTagSearch();
     state.isTagFilterOpen = false;
     renderTagFilter();
-    loadReport();
+    loadReportFromFirstPage();
   }
 
   function clearTagSearch() {
@@ -859,18 +921,18 @@
 
       control.addEventListener('change', function () {
         sync();
-        loadReport();
+        loadReportFromFirstPage();
       });
       if (start) {
         start.addEventListener('change', function () {
           syncRangeSummary(key, now);
-          loadReport();
+          loadReportFromFirstPage();
         });
       }
       if (end) {
         end.addEventListener('change', function () {
           syncRangeSummary(key, now);
-          loadReport();
+          loadReportFromFirstPage();
         });
       }
 
@@ -885,7 +947,7 @@
     inputs.forEach(function (input) {
       input.addEventListener('change', function () {
         syncStatusSummary();
-        loadReport();
+        loadReportFromFirstPage();
       });
     });
 
@@ -968,7 +1030,7 @@
 
     form.addEventListener('submit', function (event) {
       event.preventDefault();
-      loadReport();
+      loadReportFromFirstPage();
     });
   }
 
@@ -981,6 +1043,7 @@
         } else {
           state.sort = { key, direction: 'asc' };
         }
+        state.pagination.page = 1;
 
         if (state.report) {
           renderReport(state.report);
@@ -994,6 +1057,72 @@
     scheduleFrameResize();
   }
 
+  function renderPagination(totalRows) {
+    const pagination = getPagination(totalRows);
+    const pageInfo = document.getElementById('pageInfo');
+    const pageList = document.getElementById('pageList');
+    const prevButton = document.getElementById('prevPageButton');
+    const nextButton = document.getElementById('nextPageButton');
+    const pageSizeSelect = document.getElementById('pageSizeSelect');
+
+    const visibleFrom = totalRows === 0 ? 0 : pagination.startIndex + 1;
+    const visibleTo = Math.min(totalRows, pagination.endIndex);
+
+    if (pageInfo) {
+      pageInfo.textContent = `Показано ${visibleFrom}-${visibleTo} из ${totalRows}`;
+    }
+
+    if (pageList) {
+      pageList.textContent = `Страницы: ${pagination.page} / ${pagination.totalPages}`;
+    }
+
+    if (prevButton) {
+      prevButton.disabled = pagination.page <= 1;
+    }
+
+    if (nextButton) {
+      nextButton.disabled = pagination.page >= pagination.totalPages;
+    }
+
+    if (pageSizeSelect) {
+      pageSizeSelect.value = String(pagination.pageSize);
+    }
+  }
+
+  function bindPagination() {
+    const prevButton = document.getElementById('prevPageButton');
+    const nextButton = document.getElementById('nextPageButton');
+    const pageSizeSelect = document.getElementById('pageSizeSelect');
+
+    if (prevButton) {
+      prevButton.addEventListener('click', function () {
+        state.pagination.page -= 1;
+        if (state.report) {
+          renderReport(state.report);
+        }
+      });
+    }
+
+    if (nextButton) {
+      nextButton.addEventListener('click', function () {
+        state.pagination.page += 1;
+        if (state.report) {
+          renderReport(state.report);
+        }
+      });
+    }
+
+    if (pageSizeSelect) {
+      pageSizeSelect.addEventListener('change', function () {
+        state.pagination.pageSize = normalizePageSize(pageSizeSelect.value);
+        state.pagination.page = 1;
+        if (state.report) {
+          renderReport(state.report);
+        }
+      });
+    }
+  }
+
   function renderReport(report) {
     state.report = report;
     renderPrintMeta(report);
@@ -1004,7 +1133,8 @@
     const rowsRoot = document.getElementById('report-rows');
     rowsRoot.innerHTML = '';
 
-    getSortedRows(report.rows || []).forEach(function (row) {
+    const paginatedRows = getPaginatedRows(getSortedRows(report.rows || []));
+    paginatedRows.forEach(function (row) {
       const tr = document.createElement('tr');
 
       const createdAt = document.createElement('td');
@@ -1059,6 +1189,8 @@
     });
 
     syncSortButtons();
+    renderPagination((report.rows || []).length);
+    scheduleFrameResize();
   }
 
   async function loadReport() {
@@ -1102,6 +1234,11 @@
     }
   }
 
+  function loadReportFromFirstPage() {
+    state.pagination.page = 1;
+    return loadReport();
+  }
+
   document.getElementById('printButton').addEventListener('click', function () {
     window.print();
   });
@@ -1111,7 +1248,9 @@
   bindStatusPicker();
   bindTagFilter();
   bindSorting();
+  bindPagination();
   renderTagFilter();
   window.addEventListener('resize', scheduleFrameResize);
   loadReport();
 })();
+

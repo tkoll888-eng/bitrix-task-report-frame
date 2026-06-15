@@ -23,6 +23,7 @@ test('mapTaskToRow normalizes task fields for table', () => {
   assert.equal(row.id, 99);
   assert.equal(row.title, 'Настроить отчет');
   assert.equal(row.titleUrl, 'https://solution24.bitrix24.ru/company/personal/user/0/tasks/task/view/99/');
+  assert.equal(row.titleFrameUrl, 'https://solution24.bitrix24.ru/company/personal/user/0/tasks/task/view/99/?IFRAME=Y&IFRAME_TYPE=SIDE_SLIDER#');
   assert.equal(row.statusLabel, 'Выполняется');
   assert.equal(row.createdDateText, '03.06.2026');
   assert.equal(row.deadlineText, '05.06.2026');
@@ -80,4 +81,19 @@ test('mapTaskToRow reads position name from VibeCode auto field key', () => {
   });
 
   assert.equal(row.positionName, 'Позиция из пользовательского поля');
+});
+
+test('mapTaskToRow builds task link with responsible user id when available', () => {
+  const row = mapTaskToRow({
+    id: 1649,
+    title: 'Task',
+    status: 2,
+    responsibleId: 42,
+  }, {
+    portalHost: 'solution24.bitrix24.ru',
+    positionFieldCode: '',
+  });
+
+  assert.equal(row.titleUrl, 'https://solution24.bitrix24.ru/company/personal/user/42/tasks/task/view/1649/');
+  assert.equal(row.titleFrameUrl, 'https://solution24.bitrix24.ru/company/personal/user/42/tasks/task/view/1649/?IFRAME=Y&IFRAME_TYPE=SIDE_SLIDER#');
 });

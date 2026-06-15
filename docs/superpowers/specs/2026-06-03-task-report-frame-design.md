@@ -66,6 +66,8 @@ The main frame view shows:
 
 The frame must use the full available height of the smart-process tab area. The app must request or maintain embedded-frame resizing through the available Bitrix24/VibeCode mechanism so the report fills the visible screen area and does not leave a large empty lower area below the content. When content height changes after loading, filtering, sorting, or expanding UI controls, the frame height should be refreshed.
 
+Because the Bitrix24 SDK is loaded asynchronously, resizing cannot be a one-shot action. If `window.BX24.resizeWindow` is not available on the first attempt, the app retries resizing several times after the report loads. The requested height is based on the document's full `scrollHeight` plus a small padding so the bottom of the table, pagination, and totals are not hidden inside the frame work area.
+
 The main frame view does not show:
 
 - A separate page title such as `Отчет по задачам`.
@@ -88,7 +90,13 @@ The table contains these columns:
 
 `Название` is a required clickable link to the task in Bitrix24. Inside Bitrix24, the link must open the task through the available SDK object `window.BX24` and its `openPath` method so the task opens in the standard Bitrix24 slider over the current smart-process item. After the user closes the task slider, they remain in the original item card and report frame. If SDK opening does not work in embedded Bitrix24 mode, that is a behavior error rather than an acceptable fallback. Only local development mode, where `window.BX24` is unavailable from the start, may use regular same-window navigation.
 
+The visible task link `href` should remain the regular working task URL `/company/personal/user/{responsibleId}/tasks/task/view/{taskId}/` when the task payload contains a real `responsibleId`. For embedded SDK opening, build a separate frame URL `/company/personal/user/{responsibleId}/tasks/task/view/{taskId}/?IFRAME=Y&IFRAME_TYPE=SIDE_SLIDER#`. Do not use `user/0` as the primary embedded-opening URL: the regular portal page can redirect it, but `BX24.openPath` validates supported paths more strictly. When calling `BX24.openPath`, pass the path with the `IFRAME` query parameters and trailing hash `#`, not only `pathname`. If `BX24.openPath` invokes its callback with `result: "error"` and `errorCode`, the app shows that code to the user as an embedded-opening error.
+
 The table supports sorting by clicking column headers. Each click sorts the current loaded result set by the selected column; repeated clicks on the same column toggle ascending and descending order. Sorting is client-side and does not change the active filters or totals.
+
+The main screen must paginate task rows so the frame does not render a long task list at once. Below the table, show a compact Bitrix24-style pagination bar with the current page, previous/next buttons, and a `Per page` selector with `20`, `30`, and `50`. The default page size is `20`.
+
+Pagination applies only to rows displayed in the main screen after filtering and sorting. Totals and task count are calculated from the full current filtered result set, not from the current page. Changing filters, selected tags, statuses, period, completion date, sorting, or page size resets the main table to page 1. Printing uses the full current filtered report and is not limited to the visible page.
 
 ## Filters
 

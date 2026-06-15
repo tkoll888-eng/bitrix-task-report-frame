@@ -1,15 +1,16 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ru">
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Task Report Preview</title>
-    <link rel="stylesheet" href="/styles.css">
+    <link rel="stylesheet" href="/styles.css?v=20260615-13">
   </head>
   <body>
     <main class="page">
       <section class="report-shell">
         <div id="message" class="message" hidden></div>
+        <div id="frameDiagnostics" class="frame-diagnostics" hidden></div>
 
         <div class="toolbar">
           <form id="filtersForm" class="filters" aria-label="Фильтры отчета">
@@ -135,6 +136,25 @@
           </table>
         </div>
 
+        <nav id="pagination" class="pagination-bar" aria-label="Пагинация задач">
+          <div class="pagination-status">
+            <span id="pageInfo">Показано 0 из 0</span>
+            <span id="pageList">Страницы: 1</span>
+          </div>
+          <div class="pagination-controls">
+            <button id="prevPageButton" type="button" class="pagination-button">Назад</button>
+            <button id="nextPageButton" type="button" class="pagination-button">Вперед</button>
+            <label class="page-size-field">
+              <span>На странице:</span>
+              <select id="pageSizeSelect">
+                <option value="20" selected>20</option>
+                <option value="30">30</option>
+                <option value="50">50</option>
+              </select>
+            </label>
+          </div>
+        </nav>
+
         <section class="totals-strip">
           <div class="totals-item">
             <span>Плановые трудозатраты</span>
@@ -153,6 +173,7 @@
     </main>
 
     <script src="https://api.bitrix24.com/api/v1/" async></script>
-    <script src="/app.js"></script>
+    <script src="/app.js?v=20260615-13"></script>
   </body>
 </html>
+

@@ -1,4 +1,4 @@
-const test = require('node:test');
+﻿const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
@@ -64,7 +64,10 @@ test('GET / returns compact preview report shell', async () => {
   assert.match(response.text, /id="tagSuggestions" class="tag-suggestions" hidden/);
   assert.match(response.text, /id="savedTagSets" class="tag-sets" hidden/);
   assert.match(response.text, /id="printMeta"/);
+  assert.match(response.text, /<link rel="stylesheet" href="\/styles\.css\?v=/);
   assert.match(response.text, /<script src="https:\/\/api\.bitrix24\.com\/api\/v1\/" async><\/script>/);
+  assert.match(response.text, /<script src="\/app\.js\?v=/);
+  assert.match(response.headers['cache-control'] || '', /no-store/);
   assert.match(response.text, /Дата завершения/);
   assert.match(response.text, /Печать/);
   assert.match(response.text, /Плановые трудозатраты/);
@@ -73,6 +76,12 @@ test('GET / returns compact preview report shell', async () => {
   assert.match(response.text, /value="allTime" selected>Не учитывать/);
   assert.match(response.text, /data-sort-key="title"/);
   assert.match(response.text, /data-sort-key="spentSeconds"/);
+  assert.match(response.text, /id="pagination"/);
+  assert.match(response.text, /id="frameDiagnostics"/);
+  assert.match(response.text, /id="pageSizeSelect"/);
+  assert.match(response.text, /value="20" selected/);
+  assert.match(response.text, /value="30"/);
+  assert.match(response.text, /value="50"/);
   assert.doesNotMatch(response.text, /Наим\./);
   assert.doesNotMatch(response.text, /Наименование позиции/);
   assert.doesNotMatch(response.text, /Задач:/);
@@ -100,16 +109,48 @@ test('frame actions stay inside the embedded Bitrix24 frame with local fallbacks
 
   assert.match(appJs, /window\.print\(\)/);
   assert.doesNotMatch(appJs, /window\.open\(`\/print\.html/);
-  assert.doesNotMatch(appJs, /target = '_blank'/);
   assert.match(appJs, /window\.BX24/);
-  assert.match(appJs, /\.openPath\(/);
   assert.match(appJs, /\.init\(/);
-  assert.match(appJs, /window\.location\.href/);
+  assert.match(appJs, /bx24\.openPath/);
   assert.match(appJs, /resizeWindow/);
-  assert.match(appJs, /showMessage\([^)]*openPath/);
-  assert.doesNotMatch(appJs, /catch \(error\) \{\s*navigateToTask\(row\.titleUrl\);/);
+  assert.match(appJs, /fitWindow/);
+  assert.match(appJs, /FRAME_RESIZE_RETRY_LIMIT/);
+  assert.match(appJs, /FRAME_RESIZE_PADDING/);
+  assert.match(appJs, /showFrameDiagnostics/);
+  assert.match(appJs, /Resize:/);
+  assert.match(appJs, /fit=/);
+  assert.match(appJs, /sent=/);
+  assert.match(styles, /\.frame-diagnostics/);
+  assert.match(appJs, /scheduleFrameResize\(attempt \+ 1\)/);
+  assert.doesNotMatch(appJs, /link\.target = '_blank'/);
+  assert.doesNotMatch(appJs, /link\.rel = 'noopener noreferrer'/);
+  assert.match(appJs, /link\.addEventListener\('click'/);
+  assert.match(appJs, /openTask\(row, event\)/);
+  assert.match(appJs, /event\.preventDefault\(\)/);
+  assert.match(appJs, /navigateToTask\(row\.titleUrl\)/);
+  assert.match(appJs, /bx24\.openPath\(path\)/);
+  assert.doesNotMatch(appJs, /Bitrix SDK:/);
+  assert.match(styles, /\.task-link[\s\S]*color:\s*var\(--link\)/);
+  assert.match(styles, /\.task-link[\s\S]*cursor:\s*pointer/);
   assert.match(styles, /size:\s*A4 portrait/);
   assert.match(styles, /min-height:\s*calc\(100vh - 12px\)/);
+});
+
+test('main table paginates visible rows without changing full report totals', () => {
+  const appJs = fs.readFileSync(path.join(__dirname, '..', 'public', 'app.js'), 'utf8');
+  const styles = fs.readFileSync(path.join(__dirname, '..', 'public', 'styles.css'), 'utf8');
+
+  assert.match(appJs, /pagination:\s*\{\s*page:\s*1,\s*pageSize:\s*20\s*\}/);
+  assert.match(appJs, /PAGE_SIZE_OPTIONS\s*=\s*\[20,\s*30,\s*50\]/);
+  assert.match(appJs, /function getPaginatedRows/);
+  assert.match(appJs, /\.slice\(startIndex,\s*endIndex\)/);
+  assert.match(appJs, /function renderPagination/);
+  assert.match(appJs, /function loadReportFromFirstPage/);
+  assert.match(appJs, /state\.pagination\.page\s*=\s*1/);
+  assert.match(appJs, /pageSizeSelect/);
+  assert.match(appJs, /getPaginatedRows\(getSortedRows\(report\.rows \|\| \[\]\)\)/);
+  assert.match(styles, /\.pagination-bar/);
+  assert.match(styles, /@media print[\s\S]*\.pagination-bar[\s\S]*display:\s*none/);
 });
 
 test('print views omit tags and prioritize task title width', () => {
@@ -127,3 +168,4 @@ test('print views omit tags and prioritize task title width', () => {
   assert.match(styles, /@media print[\s\S]*\.tags-cell[\s\S]*display:\s*none/);
   assert.match(styles, /@media print[\s\S]*\.title-cell[\s\S]*width:\s*100%/);
 });
+
