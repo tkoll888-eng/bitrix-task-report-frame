@@ -27,6 +27,15 @@ CRM_DYNAMIC_<entityTypeId>_DETAIL_TAB
 
 The app can still use a personal VibeCode API key (`vibe_api_...`) for local server-to-server checks and discovery scripts, but production embedded requests must support the VibeCode gateway session header described below.
 
+## VibeCode Authorization Modes
+
+The project has two separate access modes, and they must not be mixed:
+
+- **Deployed Bitrix24 frame / server mode** uses `VIBECODE_APP_KEY` (`vibe_app_...`) plus the embedded user session. When the app is opened as a Bitrix24 tab, VibeCode Gateway forwards user session context to backend requests as `X-Vibe-Authorization: Bearer vibe_session_...`. The backend calls VibeCode API with `X-Api-Key: <VIBECODE_APP_KEY>` and `Authorization: Bearer <vibe_session...>`.
+- **Local/server-to-server diagnostics mode** uses `VIBECODE_API_KEY` (`vibe_api_...`) without an embedded session. This mode is for local checks, discovery scripts, and direct diagnostic calls.
+
+A direct external request to the deployed Black Hole URL, for example `/api/report?...`, is not equivalent to opening the app inside the Bitrix24 frame. Without `X-Vibe-Authorization`, that request can return `401`; this is expected and does not by itself mean that embedded frame mode is broken.
+
 In Bitrix24 frame mode, the app receives the current smart-process context from the placement:
 
 - `entityTypeId`
@@ -314,6 +323,7 @@ After deployment:
 - Verify the app opens as a frame/tab in a smart-process item card.
 - Verify placement context is detected automatically.
 - Verify the backend receives and forwards `X-Vibe-Authorization` for embedded `vibe_app_...` requests.
+- Do not treat a direct external `401` from `/api/report` without frame session as a frame-mode failure.
 - Verify the print button works inside the frame without opening a new tab or returning `401`.
 
 ## Deployment and Publication

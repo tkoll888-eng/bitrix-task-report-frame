@@ -36,6 +36,15 @@ http://localhost:<port>/?entityTypeId=184&itemId=123
 Для локальной проверки добавьте в URL параметры entityTypeId и itemId, например ?entityTypeId=184&itemId=123.
 ```
 
+## Режимы Авторизации VibeCode
+
+В проекте есть два разных режима доступа, их нельзя смешивать:
+
+- **Deployed Bitrix24 frame / server mode** работает через `VIBECODE_APP_KEY` (`vibe_app_...`) и embedded-сессию пользователя. Когда приложение открыто как вкладка Bitrix24, VibeCode Gateway передает backend-запросам заголовок `X-Vibe-Authorization: Bearer vibe_session_...`. Backend должен отправлять запросы в VibeCode API с `X-Api-Key: <VIBECODE_APP_KEY>` и `Authorization: Bearer <vibe_session...>`.
+- **Local/server-to-server diagnostics mode** работает через `VIBECODE_API_KEY` (`vibe_api_...`) без embedded-сессии. Этот режим используется для локальных проверок, discovery-скриптов и прямых диагностических запросов.
+
+Прямой внешний запрос к deployed Black Hole URL, например `/api/report?...`, без открытия приложения внутри Bitrix24 frame не имеет `X-Vibe-Authorization` и может получить `401`. Это ожидаемо и не означает, что frame-режим сломан.
+
 ## Основной Экран Frame
 
 Основной встроенный экран должен быть максимально компактным и ориентированным на данные.
@@ -245,14 +254,17 @@ http://localhost:<port>/?entityTypeId=184&itemId=123
 ## Поток Данных
 
 1. Frame открывается внутри карточки элемента смарт-процесса.
-2. Frontend читает placement context.
-3. Если placement context недоступен, frontend читает `entityTypeId` и `itemId` из URL для локальной разработки.
-4. Frontend отправляет контекст и фильтры на backend.
-5. Backend загружает элемент смарт-процесса, чтобы получить название объекта и компанию.
-6. Backend загружает задачи, привязанные к текущему элементу смарт-процесса.
-7. Backend применяет фильтры, нормализует поля, мапит статусы и считает итоги.
-8. Frontend показывает таблицу и итоги.
-9. Печатная форма строится из уже загруженной модели отчета в текущем frame и вызывает системную печать браузера.
+2. VibeCode Gateway прокидывает embedded-сессию в backend-запросы как `X-Vibe-Authorization: Bearer vibe_session_...`.
+3. Frontend читает placement context.
+4. Если placement context недоступен, frontend читает `entityTypeId` и `itemId` из URL для локальной разработки.
+5. Frontend отправляет контекст и фильтры на backend.
+6. Backend загружает элемент смарт-процесса, чтобы получить название объекта и компанию.
+7. В frame-режиме backend ходит в VibeCode API через `VIBECODE_APP_KEY` плюс forwarded `Authorization: Bearer <vibe_session...>`.
+8. В локальном диагностическом режиме backend/скрипты могут ходить в VibeCode API через `VIBECODE_API_KEY` без embedded-сессии.
+9. Backend загружает задачи, привязанные к текущему элементу смарт-процесса.
+10. Backend применяет фильтры, нормализует поля, мапит статусы и считает итоги.
+11. Frontend показывает таблицу и итоги.
+12. Печатная форма строится из уже загруженной модели отчета в текущем frame и вызывает системную печать браузера.
 
 ## Ошибки
 
@@ -298,6 +310,8 @@ http://localhost:<port>/?entityTypeId=184&itemId=123
 
 - Проверить, что приложение открывается как вкладка/frame в карточке элемента смарт-процесса.
 - Проверить, что placement context определяется автоматически.
+- Проверить, что backend получает `X-Vibe-Authorization` и запросы к VibeCode API выполняются через `VIBECODE_APP_KEY` плюс forwarded session.
+- Не считать прямой внешний `401` на `/api/report` без frame-сессии ошибкой frame-режима.
 - Проверить, что печать запускается из текущего frame без новой вкладки и без `401`.
 
 ## Открытая Деталь Реализации
@@ -310,5 +324,6 @@ http://localhost:<port>/?entityTypeId=184&itemId=123
 - Local/server discovery can still use `VIBECODE_API_KEY` (`vibe_api_...`).
 - VibeCode Gateway passes the user session to the backend as `X-Vibe-Authorization: Bearer vibe_session_...`.
 - The backend forwards that value to VibeCode API as `Authorization: Bearer ...` together with `X-Api-Key: <VIBECODE_APP_KEY>`.
+- Direct deployed `/api/report` checks outside Bitrix24 frame do not have the embedded session and may return `401`; use the local `vibe_api` path for server-to-server diagnostics.
 - Placement publication is done through VibeCode app publishing: `POST /v1/apps/:id/publish` with `CRM_DYNAMIC_<entityTypeId>_DETAIL_TAB` in `placements`.
 - Direct Bitrix24 `placement.bind` through incoming webhook is not the active project path.

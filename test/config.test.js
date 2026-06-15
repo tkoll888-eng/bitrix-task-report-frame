@@ -29,3 +29,10 @@ test('readConfig prefers embedded VIBECODE_APP_KEY when present', () => {
 test('readConfig fails when neither VIBECODE_APP_KEY nor VIBECODE_API_KEY is present', () => {
   assert.throws(() => readConfig({}), /VIBECODE_APP_KEY or VIBECODE_API_KEY/);
 });
+
+test('readConfig rejects invalid port values', () => {
+  assert.throws(() => readConfig({
+    VIBECODE_API_KEY: 'test-key',
+    PORT: 'abc',
+  }), /PORT must be a positive integer/);
+});
