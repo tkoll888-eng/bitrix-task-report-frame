@@ -62,6 +62,57 @@ test('client forwards embedded VibeCode session as Authorization header', async 
   assert.equal(calls[0].options.headers.Authorization, 'Bearer vibe_session_test');
 });
 
+test('client uses app key only with embedded session and personal key otherwise', async () => {
+  const calls = [];
+  const client = createVibecodeClient({
+    baseUrl: 'https://example.test/v1',
+    apiKey: 'personal-key',
+    appKey: 'app-key',
+    fetchImpl: async (url, options) => {
+      calls.push({ url, options });
+      return {
+        ok: true,
+        async json() {
+          return { success: true, data: [] };
+        },
+      };
+    },
+  });
+
+  await client.getTaskFields();
+  await client.getTaskFields({ authorization: 'Bearer vibe_session_test' });
+
+  assert.equal(calls[0].options.headers['X-Api-Key'], 'personal-key');
+  assert.equal(calls[0].options.headers.Authorization, undefined);
+  assert.equal(calls[1].options.headers['X-Api-Key'], 'app-key');
+  assert.equal(calls[1].options.headers.Authorization, 'Bearer vibe_session_test');
+});
+
+test('client includes VibeCode error details in failed responses', async () => {
+  const client = createVibecodeClient({
+    baseUrl: 'https://example.test/v1',
+    apiKey: 'secret',
+    fetchImpl: async () => ({
+      ok: false,
+      status: 422,
+      async json() {
+        return {
+          error: {
+            message: 'Invalid filter',
+            hint: 'Use supported task fields',
+            details: { field: 'UF_CRM_TASK' },
+          },
+        };
+      },
+    }),
+  });
+
+  await assert.rejects(
+    () => client.searchTasks({ filter: { UF_CRM_TASK: 'Tb8_123' } }),
+    /VibeCode HTTP 422: Invalid filter.*Use supported task fields.*UF_CRM_TASK/,
+  );
+});
+
 test('findFieldCodeByTitle supports VibeCode fields envelope', () => {
   const payload = {
     fields: {

@@ -18,6 +18,14 @@ function createTaskSearchBody(entityTypeId, itemId) {
   };
 }
 
+function formatCompletionText(filters) {
+  if (!filters.completionFrom && !filters.completionTo) {
+    return 'Не учитывать';
+  }
+
+  return `${filters.completionFrom || '...'} - ${filters.completionTo || '...'}`;
+}
+
 function createReportService({ client, config }) {
   async function resolvePositionFieldCode(requestOptions = {}) {
     if (config.taskPositionFieldCode) {
@@ -58,6 +66,7 @@ function createReportService({ client, config }) {
         companyName: companyName || 'не указана',
         companyReportName: buildCompanyReportName(companyName),
         periodText: `${filters.periodFrom} - ${filters.periodTo}`,
+        completionText: formatCompletionText(filters),
       },
       filters,
       rows: filteredRows,

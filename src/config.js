@@ -14,7 +14,7 @@ function readPositiveInteger(value, fallback) {
 function readConfig(env = process.env) {
   const vibecodeAppKey = String(env.VIBECODE_APP_KEY || '').trim();
   const vibecodePersonalApiKey = String(env.VIBECODE_API_KEY || '').trim();
-  const vibecodeApiKey = vibecodeAppKey || vibecodePersonalApiKey;
+  const vibecodeApiKey = vibecodePersonalApiKey || vibecodeAppKey;
   if (!vibecodeApiKey) {
     throw new Error('VIBECODE_APP_KEY or VIBECODE_API_KEY is required');
   }

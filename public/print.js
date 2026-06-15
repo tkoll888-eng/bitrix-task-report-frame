@@ -62,7 +62,6 @@
           <td class="numeric spent">${escapeHtml(row.spentText)}</td>
           <td>${escapeHtml(row.closedDateText || '—')}</td>
           <td>${escapeHtml(row.deadlineText || '—')}</td>
-          <td class="tags-cell">${escapeHtml((row.tags || []).join(' / '))}</td>
         </tr>
       `;
     }).join('');
@@ -78,7 +77,6 @@
             <th>Факт</th>
             <th>Дата завершения</th>
             <th>Крайний срок</th>
-            <th>Теги</th>
           </tr>
         </thead>
         <tbody>${body}</tbody>
@@ -120,7 +118,7 @@
       <div>${escapeHtml(report.header.companyReportName)}</div>
       <div>Объект: ${escapeHtml(report.header.objectName)}</div>
       <div>Компания: ${escapeHtml(report.header.companyName)}</div>
-      <div>Период: ${escapeHtml(report.header.periodText)}</div>
+      <div>Период: ${escapeHtml(report.header.completionText || report.header.periodText)}</div>
     `;
     document.querySelector('#tableHost').innerHTML = renderTable(report.rows, report.totals);
   }

@@ -22,6 +22,7 @@ if (process.env.VIBECODE_APP_KEY || process.env.VIBECODE_API_KEY) {
   const client = createVibecodeClient({
     baseUrl: config.vibecodeApiBase,
     apiKey: config.vibecodeApiKey,
+    appKey: config.vibecodeAppKey,
   });
   const reportService = createReportService({ client, config });
   app.use('/api/report', createReportRouter({ reportService }));

@@ -113,6 +113,7 @@ test('buildReport loads item, company, tasks, rows and totals', async () => {
   assert.equal(report.header.objectName, 'Объект А');
   assert.equal(report.header.companyName, 'ООО Ромашка');
   assert.equal(report.header.companyReportName, 'Отчет по сопровождению ООО Ромашка');
+  assert.equal(report.header.completionText, 'Не учитывать');
   assert.equal(report.rows.length, 1);
   assert.equal(report.rows[0].positionName, 'Позиция');
   assert.equal(report.totals.plannedText, '1:00');

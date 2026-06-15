@@ -15,13 +15,13 @@ test('readConfig returns defaults and required values', () => {
   assert.equal(config.taskPositionFieldName, 'Наименование позиции');
 });
 
-test('readConfig prefers embedded VIBECODE_APP_KEY when present', () => {
+test('readConfig keeps local diagnostics key as default when both keys are present', () => {
   const config = readConfig({
     VIBECODE_API_KEY: 'personal-key',
     VIBECODE_APP_KEY: 'app-key',
   });
 
-  assert.equal(config.vibecodeApiKey, 'app-key');
+  assert.equal(config.vibecodeApiKey, 'personal-key');
   assert.equal(config.vibecodeAppKey, 'app-key');
   assert.equal(config.vibecodePersonalApiKey, 'personal-key');
 });

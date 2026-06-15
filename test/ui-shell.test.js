@@ -64,6 +64,7 @@ test('GET / returns compact preview report shell', async () => {
   assert.match(response.text, /id="tagSuggestions" class="tag-suggestions" hidden/);
   assert.match(response.text, /id="savedTagSets" class="tag-sets" hidden/);
   assert.match(response.text, /id="printMeta"/);
+  assert.match(response.text, /<script src="https:\/\/api\.bitrix24\.com\/api\/v1\/" async><\/script>/);
   assert.match(response.text, /Дата завершения/);
   assert.match(response.text, /Печать/);
   assert.match(response.text, /Плановые трудозатраты/);
@@ -104,5 +105,25 @@ test('frame actions stay inside the embedded Bitrix24 frame with local fallbacks
   assert.match(appJs, /\.openPath\(/);
   assert.match(appJs, /\.init\(/);
   assert.match(appJs, /window\.location\.href/);
+  assert.match(appJs, /resizeWindow/);
+  assert.match(appJs, /showMessage\([^)]*openPath/);
+  assert.doesNotMatch(appJs, /catch \(error\) \{\s*navigateToTask\(row\.titleUrl\);/);
   assert.match(styles, /size:\s*A4 portrait/);
+  assert.match(styles, /min-height:\s*calc\(100vh - 12px\)/);
+});
+
+test('print views omit tags and prioritize task title width', () => {
+  const indexHtml = fs.readFileSync(path.join(__dirname, '..', 'public', 'index.html'), 'utf8');
+  const appJs = fs.readFileSync(path.join(__dirname, '..', 'public', 'app.js'), 'utf8');
+  const printJs = fs.readFileSync(path.join(__dirname, '..', 'public', 'print.js'), 'utf8');
+  const styles = fs.readFileSync(path.join(__dirname, '..', 'public', 'styles.css'), 'utf8');
+
+  assert.match(appJs, /completionText/);
+  assert.match(printJs, /completionText/);
+  assert.match(indexHtml, /<th class="title-cell"><button type="button" class="sort-button" data-sort-key="title">/);
+  assert.match(indexHtml, /<th class="tags-cell"><button type="button" class="sort-button" data-sort-key="tags">/);
+  assert.doesNotMatch(printJs, /<th>РўРµРіРё<\/th>/);
+  assert.doesNotMatch(printJs, /class="tags-cell"/);
+  assert.match(styles, /@media print[\s\S]*\.tags-cell[\s\S]*display:\s*none/);
+  assert.match(styles, /@media print[\s\S]*\.title-cell[\s\S]*width:\s*100%/);
 });

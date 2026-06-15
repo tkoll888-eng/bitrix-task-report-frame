@@ -447,6 +447,32 @@
     window.location.href = titleUrl;
   }
 
+  function scheduleFrameResize() {
+    const bx24 = window.BX24;
+    if (!bx24 || typeof bx24.resizeWindow !== 'function') {
+      return;
+    }
+
+    window.setTimeout(function () {
+      const height = Math.max(
+        document.body.scrollHeight,
+        document.documentElement.scrollHeight,
+        window.innerHeight,
+      );
+      const width = Math.max(
+        document.body.scrollWidth,
+        document.documentElement.scrollWidth,
+        window.innerWidth,
+      );
+
+      try {
+        bx24.resizeWindow(width, height);
+      } catch (error) {
+        // Frame resizing is best-effort; the report should remain usable locally.
+      }
+    }, 0);
+  }
+
   function ensureBitrixReady() {
     const bx24 = window.BX24;
     if (!bx24 || typeof bx24.openPath !== 'function') {
@@ -496,9 +522,15 @@
 
     event.preventDefault();
     const path = getTaskPath(row.titleUrl);
+    const hasBitrixSdk = Boolean(window.BX24);
 
     ensureBitrixReady().then(function (bx24) {
       if (!bx24 || !path || typeof bx24.openPath !== 'function') {
+        if (hasBitrixSdk) {
+          showMessage('Не удалось открыть задачу через window.BX24.openPath.', 'error');
+          return;
+        }
+
         navigateToTask(row.titleUrl);
         return;
       }
@@ -508,9 +540,14 @@
           loadReport();
         });
       } catch (error) {
-        navigateToTask(row.titleUrl);
+        showMessage('Не удалось открыть задачу через window.BX24.openPath.', 'error');
       }
     }).catch(function () {
+      if (hasBitrixSdk) {
+        showMessage('Не удалось открыть задачу через window.BX24.openPath.', 'error');
+        return;
+      }
+
       navigateToTask(row.titleUrl);
     });
   }
@@ -559,7 +596,8 @@
 
     appendPrintMetaLine(root, 'Объект', report.header && report.header.objectName);
     appendPrintMetaLine(root, 'Компания', report.header && report.header.companyName);
-    appendPrintMetaLine(root, 'Период', report.header && report.header.periodText);
+    appendPrintMetaLine(root, 'Период', report.header && (report.header.completionText || report.header.periodText));
+    scheduleFrameResize();
   }
 
   function createStatus(statusLabel, tone) {
@@ -953,6 +991,7 @@
     });
 
     syncSortButtons();
+    scheduleFrameResize();
   }
 
   function renderReport(report) {
@@ -1031,6 +1070,7 @@
       showMessage(filteredPreviewReport.rows.length
         ? 'Для локальной проверки добавьте в URL параметры entityTypeId и itemId, например ?entityTypeId=184&itemId=123.'
         : 'По выбранным фильтрам задачи не найдены.');
+      scheduleFrameResize();
       return;
     }
 
@@ -1055,8 +1095,10 @@
       rememberCurrentTagSet();
       renderTagFilter();
       showMessage(payload.data.rows.length ? '' : 'По выбранным фильтрам задачи не найдены.');
+      scheduleFrameResize();
     } catch (error) {
       showMessage(error.message, 'error');
+      scheduleFrameResize();
     }
   }
 
@@ -1070,5 +1112,6 @@
   bindTagFilter();
   bindSorting();
   renderTagFilter();
+  window.addEventListener('resize', scheduleFrameResize);
   loadReport();
 })();

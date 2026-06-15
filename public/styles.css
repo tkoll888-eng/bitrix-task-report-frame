@@ -32,6 +32,7 @@ body {
 
 .page {
   padding: 6px;
+  min-height: 100vh;
 }
 
 .report-shell {
@@ -40,6 +41,7 @@ body {
   border-radius: 4px;
   box-shadow: var(--shadow);
   padding: 18px 18px 10px;
+  min-height: calc(100vh - 12px);
 }
 
 .toolbar {
@@ -767,7 +769,7 @@ td {
   }
 
   .title-cell {
-    width: auto;
+    width: 100%;
     min-width: 0;
     white-space: normal;
     word-break: break-word;
@@ -780,8 +782,7 @@ td {
   }
 
   .tags-cell {
-    width: 1%;
-    white-space: normal;
+    display: none;
   }
 
   .task-link {

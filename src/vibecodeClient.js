@@ -6,10 +6,28 @@ function unwrapResponse(payload) {
   return payload?.data ?? payload;
 }
 
-async function requestJson(fetchImpl, baseUrl, apiKey, path, options = {}) {
+function formatErrorPayload(payload) {
+  const parts = [
+    payload?.message,
+    payload?.userMessage,
+    payload?.error?.message,
+    payload?.error?.userMessage,
+    payload?.error?.hint,
+  ].filter(Boolean);
+
+  const details = payload?.details || payload?.error?.details;
+  if (details) {
+    parts.push(typeof details === 'string' ? details : JSON.stringify(details));
+  }
+
+  return parts.join(' ');
+}
+
+async function requestJson(fetchImpl, baseUrl, apiKey, appKey, path, options = {}) {
+  const requestApiKey = options.authorization && appKey ? appKey : apiKey;
   const headers = {
     'Content-Type': 'application/json',
-    'X-Api-Key': apiKey,
+    'X-Api-Key': requestApiKey,
     ...(options.authorization ? { Authorization: options.authorization } : {}),
     ...(options.headers || {}),
   };
@@ -22,7 +40,10 @@ async function requestJson(fetchImpl, baseUrl, apiKey, path, options = {}) {
 
   const payload = await response.json();
   if (!response.ok) {
-    throw new Error(payload?.message || `VibeCode HTTP ${response.status}`);
+    const details = formatErrorPayload(payload);
+    throw new Error(details
+      ? `VibeCode HTTP ${response.status}: ${details}`
+      : `VibeCode HTTP ${response.status}`);
   }
 
   return unwrapResponse(payload);
@@ -43,23 +64,23 @@ function findFieldCodeByTitle(fields, title) {
   return match?.code || match?.fieldName || match?.id || '';
 }
 
-function createVibecodeClient({ baseUrl, apiKey, fetchImpl = fetch }) {
+function createVibecodeClient({ baseUrl, apiKey, appKey = '', fetchImpl = fetch }) {
   return {
     getTaskFields(requestOptions = {}) {
-      return requestJson(fetchImpl, baseUrl, apiKey, '/tasks/fields', requestOptions);
+      return requestJson(fetchImpl, baseUrl, apiKey, appKey, '/tasks/fields', requestOptions);
     },
     searchTasks(body, requestOptions = {}) {
-      return requestJson(fetchImpl, baseUrl, apiKey, '/tasks/search', {
+      return requestJson(fetchImpl, baseUrl, apiKey, appKey, '/tasks/search', {
         ...requestOptions,
         method: 'POST',
         body,
       });
     },
     getItem(entityTypeId, itemId, requestOptions = {}) {
-      return requestJson(fetchImpl, baseUrl, apiKey, `/items/${entityTypeId}/${itemId}`, requestOptions);
+      return requestJson(fetchImpl, baseUrl, apiKey, appKey, `/items/${entityTypeId}/${itemId}`, requestOptions);
     },
     getCompany(companyId, requestOptions = {}) {
-      return requestJson(fetchImpl, baseUrl, apiKey, `/companies/${companyId}`, requestOptions);
+      return requestJson(fetchImpl, baseUrl, apiKey, appKey, `/companies/${companyId}`, requestOptions);
     },
   };
 }

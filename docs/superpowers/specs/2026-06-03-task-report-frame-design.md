@@ -64,6 +64,8 @@ The main frame view shows:
 - The task table as the dominant visual element.
 - A compact totals strip below the table.
 
+The frame must use the full available height of the smart-process tab area. The app must request or maintain embedded-frame resizing through the available Bitrix24/VibeCode mechanism so the report fills the visible screen area and does not leave a large empty lower area below the content. When content height changes after loading, filtering, sorting, or expanding UI controls, the frame height should be refreshed.
+
 The main frame view does not show:
 
 - A separate page title such as `Отчет по задачам`.
@@ -84,7 +86,7 @@ The table contains these columns:
 - `Крайний срок`
 - `Теги`
 
-`Название` is a required clickable link to the task in Bitrix24. Inside Bitrix24, opening the link uses the available SDK object `window.BX24` and its `openPath` method so the task opens in the standard Bitrix24 slider over the current smart-process item. After the user closes the task slider, they remain in the original item card and report frame. In local development, where `window.BX24` is unavailable, the link can fall back to regular same-window navigation.
+`Название` is a required clickable link to the task in Bitrix24. Inside Bitrix24, the link must open the task through the available SDK object `window.BX24` and its `openPath` method so the task opens in the standard Bitrix24 slider over the current smart-process item. After the user closes the task slider, they remain in the original item card and report frame. If SDK opening does not work in embedded Bitrix24 mode, that is a behavior error rather than an acceptable fallback. Only local development mode, where `window.BX24` is unavailable from the start, may use regular same-window navigation.
 
 The table supports sorting by clicking column headers. Each click sorts the current loaded result set by the selected column; repeated clicks on the same column toggle ascending and descending order. Sorting is client-side and does not change the active filters or totals.
 
@@ -245,7 +247,7 @@ The print layout includes:
 - Automatically generated company report name.
 - Object name.
 - Company name.
-- Selected report period.
+- A `Период` line that shows the current `Дата завершения` filter value in the print view without changing the meaning of the underlying filter.
 - Task table.
 - Totals for planned effort and spent time.
 
@@ -256,7 +258,9 @@ The print view is the only place where the full report context is mandatory: obj
 The print view uses print-specific CSS:
 
 - Hide buttons and interactive filters.
+- Hide the `Теги` column in both print variants: inside the current frame and in legacy `print.html`.
 - Keep the table readable on portrait A4 paper.
+- Redistribute print column widths in favor of `Название`, giving it as much useful width as possible without harming readability of status, dates, and numeric columns.
 - Preserve the report header and totals.
 - Use `@page { size: A4 portrait; margin: 10mm; }`.
 
@@ -295,6 +299,18 @@ If the smart-process context cannot be determined in local mode, show the local 
 
 If company is not set on the smart-process item, the report still works and shows that the company is not specified in the print view.
 
+### VibeCode Error Diagnostics
+
+When VibeCode returns an error, the app must show more than the HTTP status. It should surface human-readable details from the API response when present: `message`, `userMessage`, `error.message`, `error.hint`, and `error.details`.
+
+Use these diagnostic rules:
+
+- `401` in local mode means a `VIBECODE_API_KEY` or key-selection problem. Local mode without `X-Vibe-Authorization` must use `VIBECODE_API_KEY`, even when `.env` also contains `VIBECODE_APP_KEY`.
+- `401` for a direct external deployed `/api/report` request without the Bitrix24 frame session is expected and is not a frame-mode failure.
+- `404` from VibeCode on `GET /items/{entityTypeId}/{itemId}` usually means the passed `itemId` does not exist for the selected `entityTypeId`.
+- `422` from VibeCode means the API rejected request parameters or body shape. Do not guess from the status alone: show the VibeCode response details and verify the endpoint, filter fields, and request body format.
+- A local URL with placeholder `itemId=123` may point to a missing item. Local verification requires a real smart-process item ID.
+
 ## Verification
 
 Before deployment:
@@ -308,20 +324,27 @@ Before deployment:
 - Verify unique saved tag sets are stored and available for quick reuse.
 - Verify completion date quick filters and manual date range.
 - Verify completion date defaults to `Не учитывать`.
+- Verify local mode with both `VIBECODE_API_KEY` and `VIBECODE_APP_KEY` in `.env`: without `X-Vibe-Authorization`, the backend must call VibeCode through `VIBECODE_API_KEY`.
+- Verify VibeCode `401`, `404`, and `422` errors show details from the API response, not only the raw HTTP status.
 - Verify status filter labels map correctly to Bitrix24 statuses.
 - Verify several statuses can be selected at the same time.
 - Verify table headers sort visible rows and toggle direction on repeated clicks.
 - Verify task title links open task cards through the Bitrix24 slider and return to the current smart-process item after closing.
+- Verify a failure of embedded `window.BX24.openPath` opening in Bitrix24 mode is treated as an error rather than a silent fallback to regular navigation.
 - Verify the compact totals strip.
 - Verify HTML print layout with the same applied filters.
 - Verify the main frame view does not show the object/company/period context block.
 - Verify the print view does show object, company, and period.
+- Verify the `Теги` column is hidden in both print variants.
+- Verify the print layout expands the `Название` column using the freed space and other secondary columns without losing readability.
+- Verify the `Период` line in the print header shows the current `Дата завершения` filter value.
 - Verify the print layout is A4 portrait.
 
 After deployment:
 
 - Verify the app opens as a frame/tab in a smart-process item card.
 - Verify placement context is detected automatically.
+- Verify the frame uses the full available tab height and does not leave a large empty lower area below the report.
 - Verify the backend receives and forwards `X-Vibe-Authorization` for embedded `vibe_app_...` requests.
 - Do not treat a direct external `401` from `/api/report` without frame session as a frame-mode failure.
 - Verify the print button works inside the frame without opening a new tab or returning `401`.

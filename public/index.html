@@ -123,12 +123,12 @@
               <tr>
                 <th><button type="button" class="sort-button" data-sort-key="createdDate">Дата создания</button></th>
                 <th><button type="button" class="sort-button" data-sort-key="statusLabel">Статус</button></th>
-                <th><button type="button" class="sort-button" data-sort-key="title">Название</button></th>
+                <th class="title-cell"><button type="button" class="sort-button" data-sort-key="title">Название</button></th>
                 <th><button type="button" class="sort-button" data-sort-key="plannedSeconds">План</button></th>
                 <th><button type="button" class="sort-button" data-sort-key="spentSeconds">Факт</button></th>
                 <th><button type="button" class="sort-button" data-sort-key="closedDate">Дата завершения</button></th>
                 <th><button type="button" class="sort-button" data-sort-key="deadline">Крайний срок</button></th>
-                <th><button type="button" class="sort-button" data-sort-key="tags">Теги</button></th>
+                <th class="tags-cell"><button type="button" class="sort-button" data-sort-key="tags">Теги</button></th>
               </tr>
             </thead>
             <tbody id="report-rows"></tbody>
@@ -152,7 +152,7 @@
       </section>
     </main>
 
-    <script src="https://api.bitrix24.com/api/v1/"></script>
+    <script src="https://api.bitrix24.com/api/v1/" async></script>
     <script src="/app.js"></script>
   </body>
 </html>
