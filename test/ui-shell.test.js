@@ -64,6 +64,11 @@ test('GET / returns compact preview report shell', async () => {
   assert.match(response.text, /id="tagSuggestions" class="tag-suggestions" hidden/);
   assert.match(response.text, /id="savedTagSets" class="tag-sets" hidden/);
   assert.match(response.text, /id="refreshReportButton"/);
+  assert.match(response.text, /id="statusPicker"/);
+  assert.match(response.text, /id="statusPresets"/);
+  assert.match(response.text, /В работе/);
+  assert.match(response.text, /Закрытые/);
+  assert.doesNotMatch(response.text, /id="selectedStatuses"/);
   assert.match(response.text, /id="printMeta"/);
   assert.match(response.text, /<link rel="stylesheet" href="\/styles\.css\?v=/);
   assert.match(response.text, /<script src="https:\/\/api\.bitrix24\.com\/api\/v1\/" async><\/script>/);
@@ -149,6 +154,8 @@ test('frame actions keep the report embedded and open task links in a safe tab',
   assert.doesNotMatch(styles, /\.frame-diagnostics/);
   assert.match(styles, /\.task-link[\s\S]*color:\s*var\(--link\)/);
   assert.match(styles, /\.task-link[\s\S]*cursor:\s*pointer/);
+  assert.match(styles, /\.status-picker[\s\S]*position:\s*relative/);
+  assert.match(styles, /\.status-picker-menu[\s\S]*position:\s*absolute/);
   assert.match(styles, /size:\s*A4 portrait/);
   assert.match(styles, /min-height:\s*calc\(100vh - 12px\)/);
 });

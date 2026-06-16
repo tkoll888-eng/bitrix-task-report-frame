@@ -134,6 +134,65 @@ input {
   min-width: 0;
 }
 
+.filter-field-status {
+  min-width: 0;
+}
+
+.status-filter {
+  min-width: 0;
+}
+
+.status-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.status-preset {
+  min-height: 22px;
+  border: 1px solid var(--tag-border);
+  border-radius: 6px;
+  padding: 0 8px;
+  background: #f8fbff;
+  color: var(--text);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.status-preset:hover {
+  background: #edf4fc;
+}
+
+.status-preset.is-active {
+  border-color: #9eb8df;
+  background: #eaf2ff;
+  color: #1b4f9c;
+}
+
+.status-chip-selected {
+  gap: 6px;
+  max-width: 170px;
+  color: #184b93;
+}
+
+.status-chip-selected span:first-child {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.status-chip-remove {
+  font-size: 14px;
+  line-height: 1;
+}
+
+.status-options {
+  display: grid;
+  gap: 2px;
+}
+
 .tag-picker-input {
   height: 30px;
   min-height: 30px;
@@ -342,6 +401,8 @@ input {
 
 .status-picker {
   position: relative;
+  display: grid;
+  gap: 8px;
 }
 
 .status-picker[open] .status-picker-summary {
@@ -363,6 +424,10 @@ input {
   user-select: none;
 }
 
+.status-picker-summary[hidden] {
+  display: none;
+}
+
 .status-picker-summary::after {
   content: "▾";
   color: var(--muted);
@@ -377,8 +442,8 @@ input {
   right: 0;
   z-index: 20;
   display: grid;
-  gap: 2px;
-  max-height: 220px;
+  gap: 10px;
+  max-height: 260px;
   overflow: auto;
   border: 1px solid #c4d2e3;
   border-radius: 4px;

@@ -1,6 +1,6 @@
 # Task Report Frame Design
 
-> Status: working specification for release `1.1`.
+> Status: working specification for release `1.2`.
 
 ## Goal
 
@@ -227,6 +227,13 @@ The completion filter also shows a compact summary beside the label:
 
 `Статус` is a multi-select filter. The user can select one or more statuses at the same time, like in the Bitrix24 interface.
 
+The filter includes two quick presets:
+
+- `В работе` = `Ждёт выполнения`, `Выполняется`, `Ожидает контроля`, `Отложена`
+- `Закрытые` = `Завершена`, `Отклонена`
+
+The presets are convenience shortcuts, not locked modes. After choosing a preset, the user can still add or remove any individual status manually from the checklist.
+
 The filter shows the current Bitrix24 task statuses:
 
 - `Ждёт выполнения`
@@ -347,6 +354,7 @@ Before deployment:
 - Verify VibeCode `401`, `404`, and `422` errors show details from the API response, not only the raw HTTP status.
 - Verify status filter labels map correctly to Bitrix24 statuses.
 - Verify several statuses can be selected at the same time.
+- Verify the `Статус` filter offers `В работе` and `Закрытые` presets and still allows manual add/remove of individual statuses after a preset is chosen.
 - Verify table headers sort visible rows and toggle direction on repeated clicks.
 - Verify task title links open the regular Bitrix24 task card in a new tab without breaking the current report frame.
 - Embedded task opening inside the current Bitrix24 frame/slider remains an unresolved platform issue; do not mark it implemented without a separate confirmed Bitrix24 check.

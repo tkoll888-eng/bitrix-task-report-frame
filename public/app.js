@@ -59,6 +59,11 @@
     { value: '7', label: 'Отклонена' },
   ];
 
+  const STATUS_PRESETS = [
+    { key: 'work', label: 'В работе', values: ['2', '3', '4', '6'] },
+    { key: 'closed', label: 'Закрытые', values: ['5', '7'] },
+  ];
+
   function readContext() {
     const params = new URLSearchParams(window.location.search);
     const getParam = function (name) {
@@ -355,6 +360,72 @@
         return input.value;
       },
     );
+  }
+
+  function getStatusLabel(value) {
+    const found = STATUS_OPTIONS.find(function (option) {
+      return option.value === String(value);
+    });
+
+    return found ? found.label : String(value);
+  }
+
+  function normalizeStatusValues(values) {
+    const selected = new Set((Array.isArray(values) ? values : []).map(function (value) {
+      return String(value);
+    }));
+
+    return STATUS_OPTIONS
+      .map(function (option) {
+        return option.value;
+      })
+      .filter(function (value) {
+        return selected.has(value);
+      });
+  }
+
+  function getStatusPresetForSelection(selectedStatuses) {
+    const normalized = normalizeStatusValues(selectedStatuses);
+    return STATUS_PRESETS.find(function (preset) {
+      if (preset.values.length !== normalized.length) {
+        return false;
+      }
+
+      return preset.values.every(function (value, index) {
+        return value === normalized[index];
+      });
+    }) || null;
+  }
+
+  function setSelectedStatuses(values) {
+    const selected = new Set(normalizeStatusValues(values));
+
+    document.querySelectorAll('input[name="statusFilter"]').forEach(function (input) {
+      input.checked = selected.has(input.value);
+    });
+
+    renderStatusPresets();
+    syncStatusSummary();
+  }
+
+  function renderStatusPresets() {
+    const root = document.getElementById('statusPresets');
+    if (!root) {
+      return;
+    }
+
+    const selected = getSelectedStatuses();
+    const activePreset = getStatusPresetForSelection(selected);
+
+    root.querySelectorAll('[data-status-preset]').forEach(function (button) {
+      const presetKey = button.getAttribute('data-status-preset');
+      const preset = STATUS_PRESETS.find(function (item) {
+        return item.key === presetKey;
+      });
+
+      button.classList.toggle('is-active', Boolean(activePreset && preset && activePreset.key === preset.key));
+      button.setAttribute('aria-pressed', Boolean(activePreset && preset && activePreset.key === preset.key));
+    });
   }
 
   function readFilters() {
@@ -773,14 +844,21 @@
       return;
     }
 
-    const selected = Array.from(document.querySelectorAll('input[name="statusFilter"]:checked'));
+    const selected = getSelectedStatuses();
     if (selected.length === 0 || selected.length === STATUS_OPTIONS.length) {
       summary.textContent = 'Все статусы';
       return;
     }
 
+    const preset = getStatusPresetForSelection(selected);
+    if (preset) {
+      summary.textContent = preset.label;
+      return;
+    }
+
     if (selected.length === 1) {
-      summary.textContent = selected[0].getAttribute('data-label') || selected[0].value;
+      const label = getStatusLabel(selected[0]);
+      summary.textContent = label;
       return;
     }
 
@@ -828,10 +906,28 @@
   function bindStatusPicker() {
     const picker = document.getElementById('statusPicker');
     const inputs = document.querySelectorAll('input[name="statusFilter"]');
+    const presetButtons = document.querySelectorAll('[data-status-preset]');
 
     inputs.forEach(function (input) {
       input.addEventListener('change', function () {
+        renderStatusPresets();
         syncStatusSummary();
+        loadReportFromFirstPage();
+      });
+    });
+
+    presetButtons.forEach(function (button) {
+      button.addEventListener('click', function () {
+        const presetKey = button.getAttribute('data-status-preset');
+        const preset = STATUS_PRESETS.find(function (item) {
+          return item.key === presetKey;
+        });
+
+        if (!preset) {
+          return;
+        }
+
+        setSelectedStatuses(preset.values);
         loadReportFromFirstPage();
       });
     });
@@ -842,6 +938,7 @@
       }
     });
 
+    renderStatusPresets();
     syncStatusSummary();
   }
 

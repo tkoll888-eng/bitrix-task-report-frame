@@ -76,35 +76,41 @@
               </div>
             </div>
 
-            <div class="filter-field">
+            <div class="filter-field filter-field-status">
               <span>Статус</span>
               <details id="statusPicker" class="status-picker">
                 <summary id="statusSummary" class="status-picker-summary">Все статусы</summary>
                 <div class="status-picker-menu">
-                  <label class="status-option">
-                    <input type="checkbox" name="statusFilter" value="2" data-label="Ждёт выполнения">
-                    <span>Ждёт выполнения</span>
-                  </label>
-                  <label class="status-option">
-                    <input type="checkbox" name="statusFilter" value="3" data-label="Выполняется">
-                    <span>Выполняется</span>
-                  </label>
-                  <label class="status-option">
-                    <input type="checkbox" name="statusFilter" value="4" data-label="Ожидает контроля">
-                    <span>Ожидает контроля</span>
-                  </label>
-                  <label class="status-option">
-                    <input type="checkbox" name="statusFilter" value="5" data-label="Завершена">
-                    <span>Завершена</span>
-                  </label>
-                  <label class="status-option">
-                    <input type="checkbox" name="statusFilter" value="6" data-label="Отложена">
-                    <span>Отложена</span>
-                  </label>
-                  <label class="status-option">
-                    <input type="checkbox" name="statusFilter" value="7" data-label="Отклонена">
-                    <span>Отклонена</span>
-                  </label>
+                  <div id="statusPresets" class="status-presets">
+                    <button type="button" class="status-preset" data-status-preset="work">В работе</button>
+                    <button type="button" class="status-preset" data-status-preset="closed">Закрытые</button>
+                  </div>
+                  <div class="status-options">
+                    <label class="status-option">
+                      <input type="checkbox" name="statusFilter" value="2" data-label="Ждёт выполнения">
+                      <span>Ждёт выполнения</span>
+                    </label>
+                    <label class="status-option">
+                      <input type="checkbox" name="statusFilter" value="3" data-label="Выполняется">
+                      <span>Выполняется</span>
+                    </label>
+                    <label class="status-option">
+                      <input type="checkbox" name="statusFilter" value="4" data-label="Ожидает контроля">
+                      <span>Ожидает контроля</span>
+                    </label>
+                    <label class="status-option">
+                      <input type="checkbox" name="statusFilter" value="5" data-label="Завершена">
+                      <span>Завершена</span>
+                    </label>
+                    <label class="status-option">
+                      <input type="checkbox" name="statusFilter" value="6" data-label="Отложена">
+                      <span>Отложена</span>
+                    </label>
+                    <label class="status-option">
+                      <input type="checkbox" name="statusFilter" value="7" data-label="Отклонена">
+                      <span>Отклонена</span>
+                    </label>
+                  </div>
                 </div>
               </details>
             </div>
