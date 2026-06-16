@@ -1,5 +1,7 @@
 # Task Report Frame Implementation Plan
 
+> Status: completed. The current working application is accepted as release `1.0`. Any further enhancements should be tracked in a new separate plan rather than extending this one.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Build and deploy a VibeCode/Bitrix24 app that appears as a smart-process detail tab and shows a filtered task report for the current smart-process item.

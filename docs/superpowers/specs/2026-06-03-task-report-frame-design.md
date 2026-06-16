@@ -1,5 +1,7 @@
 # Task Report Frame Design
 
+> Status: working specification for release `1.0`.
+
 ## Goal
 
 Build a VibeCode/Bitrix24 application in `C:\AI\tasks`.
@@ -60,6 +62,7 @@ The main embedded frame is intentionally compact and data-first.
 The main frame view shows:
 
 - A compact top row with filters.
+- A compact service-message row (`Loading...`, empty-result, and error states) below the filters and before the table.
 - A `Печать` button in the same top area.
 - The task table as the dominant visual element.
 - A compact totals strip below the table.
@@ -69,6 +72,8 @@ The frame must use the full available height of the smart-process tab area. The 
 Because the Bitrix24 SDK is loaded asynchronously, resizing cannot be a one-shot action. If `window.BX24.resizeWindow` is not available on the first attempt, the app retries resizing several times after the report loads. The requested height is based on the document's full `scrollHeight` plus a small padding so the bottom of the table, pagination, and totals are not hidden inside the frame work area.
 
 Visible resize diagnostics, test strings, and the experimental `BX24.fitWindow` call must not appear in the production UI. Testing showed that Bitrix24/VibeCode may still cap the actual tab area height regardless of the requested `resizeWindow`; in that case the app keeps best-effort resizing and does not show a user-facing debug block.
+
+Service messages must not change the position of the filter bar. The message block is rendered below the filters so loading and filter changes do not make the top section jump.
 
 The main frame view does not show:
 

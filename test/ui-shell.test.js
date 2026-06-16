@@ -89,6 +89,23 @@ test('GET / returns compact preview report shell', async () => {
   assert.doesNotMatch(response.text, /Компания/);
 });
 
+test('status message is rendered below filters to avoid layout jump while filtering', async () => {
+  const app = loadAppWithoutApiKey();
+  const response = await request(app).get('/');
+
+  assert.equal(response.status, 200);
+
+  const toolbarIndex = response.text.indexOf('<div class="toolbar">');
+  const messageIndex = response.text.indexOf('<div id="message" class="message" hidden></div>');
+  const tableIndex = response.text.indexOf('<div class="table-wrap">');
+
+  assert.notEqual(toolbarIndex, -1);
+  assert.notEqual(messageIndex, -1);
+  assert.notEqual(tableIndex, -1);
+  assert.ok(messageIndex > toolbarIndex);
+  assert.ok(messageIndex < tableIndex);
+});
+
 test('GET /print.html returns print shell', async () => {
   const app = loadAppWithoutApiKey();
   const response = await request(app).get('/print.html');

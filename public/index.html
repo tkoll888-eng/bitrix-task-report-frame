@@ -4,13 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Task Report Preview</title>
-    <link rel="stylesheet" href="/styles.css?v=20260615-15">
+    <link rel="stylesheet" href="/styles.css?v=20260616-01">
   </head>
   <body>
     <main class="page">
       <section class="report-shell">
-        <div id="message" class="message" hidden></div>
-
         <div class="toolbar">
           <form id="filtersForm" class="filters" aria-label="Фильтры отчета">
             <div class="filter-group" data-filter-group="period">
@@ -115,6 +113,8 @@
           <button id="printButton" type="button" class="print-button">Печать</button>
         </div>
 
+        <div id="message" class="message" hidden></div>
+
         <section id="printMeta" class="print-meta-main" aria-hidden="true"></section>
 
         <div class="table-wrap">
@@ -172,7 +172,7 @@
     </main>
 
     <script src="https://api.bitrix24.com/api/v1/" async></script>
-    <script src="/app.js?v=20260615-15"></script>
+    <script src="/app.js?v=20260616-01"></script>
   </body>
 </html>
 
