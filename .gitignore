@@ -5,3 +5,10 @@ node_modules/
 openapi.json
 opencode.jsonc
 .opencode/
+.server-err.log
+.server-out.log
+.tmp-codex-server-err.log
+.tmp-codex-server-out.log
+.tmp-live-out.log
+.tmp-print-out.log
+app.tar.gz
