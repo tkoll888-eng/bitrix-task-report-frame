@@ -154,8 +154,10 @@ test('frame actions keep the report embedded and open task links in a safe tab',
   assert.doesNotMatch(styles, /\.frame-diagnostics/);
   assert.match(styles, /\.task-link[\s\S]*color:\s*var\(--link\)/);
   assert.match(styles, /\.task-link[\s\S]*cursor:\s*pointer/);
+  assert.match(styles, /\.toolbar[\s\S]*align-items:\s*center/);
   assert.match(styles, /\.status-picker[\s\S]*position:\s*relative/);
   assert.match(styles, /\.status-picker-menu[\s\S]*position:\s*absolute/);
+  assert.match(styles, /\.print-button[\s\S]*height:\s*44px/);
   assert.match(styles, /size:\s*A4 portrait/);
   assert.match(styles, /min-height:\s*calc\(100vh - 12px\)/);
 });

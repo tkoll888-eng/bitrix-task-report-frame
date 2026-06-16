@@ -48,7 +48,7 @@ body {
   display: flex;
   gap: 20px;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
   margin-bottom: 14px;
 }
 
@@ -378,10 +378,11 @@ input {
 }
 
 .print-button {
-  min-height: 30px;
+  height: 44px;
+  min-height: 44px;
   border: 1px solid #c6d2e0;
   border-radius: 4px;
-  padding: 0 14px;
+  padding: 0 16px;
   background: #fdfefe;
   color: #61748a;
   font: inherit;

@@ -1,6 +1,6 @@
 # Task Report Frame Design
 
-> Status: working specification for release `1.2`.
+> Status: working specification for release `1.3`.
 
 ## Goal
 
@@ -263,6 +263,8 @@ Time is displayed in `H:MM` format.
 ## Print View
 
 The main report toolbar provides two actions in the same top bar: `Обновить` and `Печать`.
+The action buttons are vertically aligned with the filter row so the top bar reads as one compact line rather than dropping the actions below the filters.
+The action buttons use a 44px-tall control height so they remain visually balanced with the compact filter inputs.
 
 `Обновить` reloads the currently visible report data on the main screen using the same query parameters and current context. It does not change filters or open a new page.
 
