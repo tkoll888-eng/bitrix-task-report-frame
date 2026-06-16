@@ -63,6 +63,7 @@ test('GET / returns compact preview report shell', async () => {
   assert.match(response.text, /id="savedTagSetsQuick"/);
   assert.match(response.text, /id="tagSuggestions" class="tag-suggestions" hidden/);
   assert.match(response.text, /id="savedTagSets" class="tag-sets" hidden/);
+  assert.match(response.text, /id="refreshReportButton"/);
   assert.match(response.text, /id="printMeta"/);
   assert.match(response.text, /<link rel="stylesheet" href="\/styles\.css\?v=/);
   assert.match(response.text, /<script src="https:\/\/api\.bitrix24\.com\/api\/v1\/" async><\/script>/);
@@ -117,6 +118,9 @@ test('GET /print.html returns print shell', async () => {
   assert.match(response.text, /print\.js/);
   assert.doesNotMatch(response.text, /Наим\./);
   assert.doesNotMatch(response.text, /Наименование позиции/);
+  assert.doesNotMatch(response.text, /Обновить/);
+  assert.doesNotMatch(response.text, /id="refreshReportButton"/);
+  assert.doesNotMatch(response.text, /class="print-actions"/);
 });
 
 test('frame actions keep the report embedded and open task links in a safe tab', () => {
@@ -173,11 +177,18 @@ test('print views omit tags and prioritize task title width', () => {
   const styles = fs.readFileSync(path.join(__dirname, '..', 'public', 'styles.css'), 'utf8');
 
   assert.match(appJs, /completionText/);
+  assert.match(appJs, /refreshReportButton/);
+  assert.match(appJs, /Обновить/);
+  assert.match(appJs, /Обновление\.\.\./);
   assert.match(printJs, /completionText/);
+  assert.doesNotMatch(printJs, /refreshReportButton/);
+  assert.doesNotMatch(printJs, /Обновить/);
+  assert.doesNotMatch(printJs, /Обновление\.\.\./);
   assert.match(indexHtml, /<th class="title-cell"><button type="button" class="sort-button" data-sort-key="title">/);
   assert.match(indexHtml, /<th class="tags-cell"><button type="button" class="sort-button" data-sort-key="tags">/);
   assert.doesNotMatch(printJs, /<th>РўРµРіРё<\/th>/);
   assert.doesNotMatch(printJs, /class="tags-cell"/);
+  assert.match(styles, /\.print-actions/);
   assert.match(styles, /@media print[\s\S]*\.tags-cell[\s\S]*display:\s*none/);
   assert.match(styles, /@media print[\s\S]*\.title-cell[\s\S]*width:\s*100%/);
 });

@@ -333,6 +333,13 @@ input {
   background: #f5f9fd;
 }
 
+.print-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex: 0 0 auto;
+}
+
 .status-picker {
   position: relative;
 }
@@ -654,6 +661,10 @@ td {
   }
 
   .print-button {
+    align-self: flex-end;
+  }
+
+  .print-actions {
     align-self: flex-end;
   }
 

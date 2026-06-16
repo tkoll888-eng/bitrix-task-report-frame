@@ -1,6 +1,6 @@
 # Task Report Frame Design
 
-> Status: working specification for release `1.0`.
+> Status: working specification for release `1.1`.
 
 ## Goal
 
@@ -255,6 +255,10 @@ Time is displayed in `H:MM` format.
 
 ## Print View
 
+The main report toolbar provides two actions in the same top bar: `Обновить` and `Печать`.
+
+`Обновить` reloads the currently visible report data on the main screen using the same query parameters and current context. It does not change filters or open a new page.
+
 The `print` button prints from the current authorized Bitrix24/VibeCode frame. It must not open `/print.html` in a new browser tab, because a new Black Hole subdomain tab does not inherit the embedded VibeCode Gateway session and returns `401`.
 
 The print layout includes:
@@ -348,6 +352,7 @@ Before deployment:
 - Embedded task opening inside the current Bitrix24 frame/slider remains an unresolved platform issue; do not mark it implemented without a separate confirmed Bitrix24 check.
 - Verify the compact totals strip.
 - Verify HTML print layout with the same applied filters.
+- Verify the main toolbar shows both `Обновить` and `Печать`, and `Обновить` reloads the visible report without opening a new page.
 - Verify the main frame view does not show the object/company/period context block.
 - Verify the print view does show object, company, and period.
 - Verify the `Теги` column is hidden in both print variants.

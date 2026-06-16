@@ -1123,6 +1123,37 @@
     return loadReport();
   }
 
+  async function refreshReport() {
+    const refreshButton = document.getElementById('refreshReportButton');
+    const printButton = document.getElementById('printButton');
+
+    if (refreshButton) {
+      refreshButton.disabled = true;
+      refreshButton.textContent = 'Обновление...';
+    }
+    if (printButton) {
+      printButton.disabled = true;
+    }
+
+    try {
+      await loadReport();
+    } finally {
+      if (refreshButton) {
+        refreshButton.disabled = false;
+        refreshButton.textContent = 'Обновить';
+      }
+      if (printButton) {
+        printButton.disabled = false;
+      }
+    }
+  }
+
+  document.getElementById('refreshReportButton').addEventListener('click', function () {
+    refreshReport().catch(function (error) {
+      showMessage(error.message, 'error');
+    });
+  });
+
   document.getElementById('printButton').addEventListener('click', function () {
     window.print();
   });
