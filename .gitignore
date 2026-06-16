@@ -3,3 +3,5 @@ node_modules/
 *.log
 *.tar.gz
 openapi.json
+opencode.jsonc
+.opencode/
