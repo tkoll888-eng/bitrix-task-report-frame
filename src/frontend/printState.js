@@ -38,4 +38,21 @@ function parseReportResponseText({ ok, status, contentType, text }) {
   };
 }
 
-module.exports = { parseReportResponseText };
+function cleanFilenamePart(value) {
+  return String(value || '')
+    .replace(/[<>:"/\\|?*\u0000-\u001f]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function buildPrintDocumentTitle(report) {
+  const header = report?.header || {};
+  const companyName = cleanFilenamePart(header.companyName || 'Контрагент');
+  const period = cleanFilenamePart(
+    header.printCompletionText || header.completionText || header.periodText || 'Период',
+  );
+
+  return cleanFilenamePart(`${companyName} ${period}`) || 'Отчет по задачам';
+}
+
+module.exports = { parseReportResponseText, buildPrintDocumentTitle };

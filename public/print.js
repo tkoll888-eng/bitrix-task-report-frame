@@ -51,6 +51,25 @@
     });
   }
 
+  function cleanFilenamePart(value) {
+    return String(value || '')
+      .replace(/[<>:"/\\|?*\u0000-\u001f]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  function buildPrintDocumentTitle(report) {
+    const header = (report && report.header) || {};
+    const companyName = cleanFilenamePart(header.companyName || 'Контрагент');
+    const period = cleanFilenamePart(
+      header.printCompletionText || header.completionText || header.periodText || 'Период',
+    );
+
+    return cleanFilenamePart(`${companyName} ${period}`) || 'Отчет по задачам';
+  }
+
+  let currentReport = null;
+
   function renderTable(rows, totals) {
     const body = rows.map(function (row) {
       return `
@@ -59,7 +78,6 @@
           <td>${escapeHtml(row.statusLabel)}</td>
           <td class="title-cell">${escapeHtml(row.title)}</td>
           <td class="numeric">${escapeHtml(row.plannedText)}</td>
-          <td class="numeric spent">${escapeHtml(row.spentText)}</td>
           <td>${escapeHtml(row.closedDateText || '—')}</td>
           <td>${escapeHtml(row.deadlineText || '—')}</td>
         </tr>
@@ -73,8 +91,7 @@
             <th>Дата создания</th>
             <th>Статус</th>
             <th>Название</th>
-            <th>План</th>
-            <th>Факт</th>
+            <th>Время</th>
             <th>Дата завершения</th>
             <th>Крайний срок</th>
           </tr>
@@ -83,12 +100,8 @@
       </table>
       <section class="totals-strip">
         <div class="totals-item">
-          <span>Плановые трудозатраты</span>
+          <span>Трудозатраты</span>
           <strong>${escapeHtml(totals.plannedText || '0:00')}</strong>
-        </div>
-        <div class="totals-item">
-          <span>Затраченное время</span>
-          <strong>${escapeHtml(totals.spentText || '0:00')}</strong>
         </div>
         <div class="totals-count">
           <span>Количество задач</span>
@@ -114,16 +127,21 @@
     }
 
     const report = payload.data;
+    currentReport = report;
+    document.title = buildPrintDocumentTitle(report);
     document.querySelector('#reportMeta').innerHTML = `
       <div>${escapeHtml(report.header.companyReportName)}</div>
-      <div>Объект: ${escapeHtml(report.header.objectName)}</div>
+      <div>Проект: ${escapeHtml(report.header.objectName)}</div>
       <div>Компания: ${escapeHtml(report.header.companyName)}</div>
-      <div>Период: ${escapeHtml(report.header.completionText || report.header.periodText)}</div>
+      <div>Период: ${escapeHtml(report.header.printCompletionText || report.header.completionText)}</div>
     `;
     document.querySelector('#tableHost').innerHTML = renderTable(report.rows, report.totals);
   }
 
   document.querySelector('#printNowButton').addEventListener('click', function () {
+    if (currentReport) {
+      document.title = buildPrintDocumentTitle(currentReport);
+    }
     window.print();
   });
 

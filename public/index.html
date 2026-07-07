@@ -18,8 +18,8 @@
                   <span class="range-inline" data-range-inline="period"></span>
                 </span>
                 <select id="periodPreset" data-range-toggle="period">
-                  <option value="allTime">За все время</option>
-                  <option value="currentMonth" selected>Текущий месяц</option>
+                  <option value="allTime" selected>За все время</option>
+                  <option value="currentMonth">Текущий месяц</option>
                   <option value="previousMonth">Прошлый месяц</option>
                   <option value="currentWeek">Текущая неделя</option>
                   <option value="previousWeek">Прошлая неделя</option>
@@ -133,8 +133,8 @@
                 <th><button type="button" class="sort-button" data-sort-key="createdDate">Дата создания</button></th>
                 <th><button type="button" class="sort-button" data-sort-key="statusLabel">Статус</button></th>
                 <th class="title-cell"><button type="button" class="sort-button" data-sort-key="title">Название</button></th>
-                <th><button type="button" class="sort-button" data-sort-key="plannedSeconds">План</button></th>
-                <th><button type="button" class="sort-button" data-sort-key="spentSeconds">Факт</button></th>
+                <th><button type="button" class="sort-button" data-sort-key="plannedSeconds"><span class="screen-planned-label">План</span><span class="print-planned-label">Время</span></button></th>
+                <th class="spent"><button type="button" class="sort-button" data-sort-key="spentSeconds">Факт</button></th>
                 <th><button type="button" class="sort-button" data-sort-key="closedDate">Дата завершения</button></th>
                 <th><button type="button" class="sort-button" data-sort-key="deadline">Крайний срок</button></th>
                 <th class="tags-cell"><button type="button" class="sort-button" data-sort-key="tags">Теги</button></th>
@@ -165,10 +165,11 @@
 
         <section class="totals-strip">
           <div class="totals-item">
-            <span>Плановые трудозатраты</span>
+            <span class="screen-planned-label">Плановые трудозатраты</span>
+            <span class="print-planned-label">Трудозатраты</span>
             <strong id="planned-total">0:00</strong>
           </div>
-          <div class="totals-item">
+          <div class="totals-item spent-total-item">
             <span>Затраченное время</span>
             <strong id="spent-total">0:00</strong>
           </div>

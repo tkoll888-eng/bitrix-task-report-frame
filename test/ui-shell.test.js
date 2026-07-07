@@ -79,6 +79,7 @@ test('GET / returns compact preview report shell', async () => {
   assert.match(response.text, /Плановые трудозатраты/);
   assert.match(response.text, /Затраченное время/);
   assert.match(response.text, /Количество задач/);
+  assert.match(response.text, /<option value="allTime" selected>За все время<\/option>/);
   assert.match(response.text, /value="allTime" selected>Не учитывать/);
   assert.match(response.text, /data-sort-key="title"/);
   assert.match(response.text, /data-sort-key="spentSeconds"/);
@@ -128,11 +129,16 @@ test('GET /print.html returns print shell', async () => {
   assert.doesNotMatch(response.text, /class="print-actions"/);
 });
 
-test('frame actions keep the report embedded and open task links in a safe tab', () => {
+test('frame actions keep task links safe and print from generated document', () => {
   const appJs = fs.readFileSync(path.join(__dirname, '..', 'public', 'app.js'), 'utf8');
   const styles = fs.readFileSync(path.join(__dirname, '..', 'public', 'styles.css'), 'utf8');
 
-  assert.match(appJs, /window\.print\(\)/);
+  assert.match(appJs, /sort:\s*\{\s*key:\s*'closedDate',\s*direction:\s*'desc'\s*\}/);
+  assert.match(appJs, /if\s*\(\s*key\s*===\s*'closedDate'\s*\)/);
+  assert.match(appJs, /return\s+-1/);
+  assert.match(appJs, /function openPrintDocument/);
+  assert.match(appJs, /printWindow\.print\(\)/);
+  assert.doesNotMatch(appJs, /window\.print\(\)/);
   assert.doesNotMatch(appJs, /window\.open\(`\/print\.html/);
   assert.match(appJs, /window\.BX24/);
   assert.match(appJs, /resizeWindow/);
@@ -185,11 +191,11 @@ test('print views omit tags and prioritize task title width', () => {
   const printJs = fs.readFileSync(path.join(__dirname, '..', 'public', 'print.js'), 'utf8');
   const styles = fs.readFileSync(path.join(__dirname, '..', 'public', 'styles.css'), 'utf8');
 
-  assert.match(appJs, /completionText/);
+  assert.match(appJs, /printCompletionText/);
   assert.match(appJs, /refreshReportButton/);
   assert.match(appJs, /Обновить/);
   assert.match(appJs, /Обновление\.\.\./);
-  assert.match(printJs, /completionText/);
+  assert.match(printJs, /printCompletionText/);
   assert.doesNotMatch(printJs, /refreshReportButton/);
   assert.doesNotMatch(printJs, /Обновить/);
   assert.doesNotMatch(printJs, /Обновление\.\.\./);
@@ -200,5 +206,64 @@ test('print views omit tags and prioritize task title width', () => {
   assert.match(styles, /\.print-actions/);
   assert.match(styles, /@media print[\s\S]*\.tags-cell[\s\S]*display:\s*none/);
   assert.match(styles, /@media print[\s\S]*\.title-cell[\s\S]*width:\s*100%/);
+});
+
+test('print views hide fact time and rename planned time labels', () => {
+  const appJs = fs.readFileSync(path.join(__dirname, '..', 'public', 'app.js'), 'utf8');
+  const printJs = fs.readFileSync(path.join(__dirname, '..', 'public', 'print.js'), 'utf8');
+  const styles = fs.readFileSync(path.join(__dirname, '..', 'public', 'styles.css'), 'utf8');
+
+  assert.match(appJs, /printCompletionText/);
+  assert.match(printJs, /printCompletionText/);
+  assert.match(printJs, /<th>Время<\/th>/);
+  assert.match(printJs, /<span>Трудозатраты<\/span>/);
+  assert.doesNotMatch(printJs, /<th>Факт<\/th>/);
+  assert.doesNotMatch(printJs, /row\.spentText/);
+  assert.doesNotMatch(printJs, /Затраченное время/);
+  assert.match(styles, /@media print[\s\S]*\.spent[\s\S]*display:\s*none/);
+  assert.match(styles, /@media print[\s\S]*\.screen-planned-label[\s\S]*display:\s*none/);
+  assert.match(styles, /@media print[\s\S]*\.print-planned-label[\s\S]*display:\s*inline/);
+});
+
+test('print spent total hide rule has priority over totals layout', () => {
+  const styles = fs.readFileSync(path.join(__dirname, '..', 'public', 'styles.css'), 'utf8');
+  const printMediaIndex = styles.indexOf('@media print');
+  const totalsLayoutIndex = styles.indexOf('.totals-item,', printMediaIndex);
+  const spentHideIndex = styles.indexOf('.spent-total-item', printMediaIndex);
+  const spentHideRule = styles.slice(spentHideIndex, styles.indexOf('}', spentHideIndex) + 1);
+
+  assert.notEqual(printMediaIndex, -1);
+  assert.notEqual(totalsLayoutIndex, -1);
+  assert.ok(spentHideIndex > totalsLayoutIndex);
+  assert.match(spentHideRule, /display:\s*none\s*!important/);
+});
+
+test('print header labels project instead of object', () => {
+  const appJs = fs.readFileSync(path.join(__dirname, '..', 'public', 'app.js'), 'utf8');
+  const printJs = fs.readFileSync(path.join(__dirname, '..', 'public', 'print.js'), 'utf8');
+
+  assert.match(appJs, /'Проект'/);
+  assert.doesNotMatch(appJs, /'Объект'/);
+  assert.match(printJs, /Проект:/);
+  assert.doesNotMatch(printJs, /Объект:/);
+});
+
+test('print actions set pdf filename from report before printing', () => {
+  const appJs = fs.readFileSync(path.join(__dirname, '..', 'public', 'app.js'), 'utf8');
+  const printJs = fs.readFileSync(path.join(__dirname, '..', 'public', 'print.js'), 'utf8');
+
+  assert.match(appJs, /function buildPrintDocumentTitle/);
+  assert.match(appJs, /function buildPrintDocumentHtml/);
+  assert.match(appJs, /function openPrintDocument/);
+  assert.match(appJs, /window\.open\('', '_blank'\)/);
+  assert.match(appJs, /printWindow\.document\.write\(buildPrintDocumentHtml\(state\.report\)\)/);
+  assert.match(appJs, /printWindow\.print\(\)/);
+  assert.match(appJs, /document\.title\s*=\s*buildPrintDocumentTitle\(report\)/);
+  assert.match(appJs, /document\.title\s*=\s*buildPrintDocumentTitle\(state\.report\)/);
+  assert.doesNotMatch(appJs, /window\.print\(\)/);
+  assert.doesNotMatch(appJs, /document\.title\s*=\s*previousTitle/);
+  assert.match(printJs, /function buildPrintDocumentTitle/);
+  assert.match(printJs, /document\.title\s*=\s*buildPrintDocumentTitle\(report\)/);
+  assert.match(printJs, /document\.title\s*=\s*buildPrintDocumentTitle\(currentReport\)/);
 });
 

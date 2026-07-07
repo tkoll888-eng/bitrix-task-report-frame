@@ -26,6 +26,41 @@ function formatCompletionText(filters) {
   return `${filters.completionFrom || '...'} - ${filters.completionTo || '...'}`;
 }
 
+function capitalizeFirst(value) {
+  if (!value) {
+    return '';
+  }
+
+  return value.charAt(0).toUpperCase() + value.slice(1);
+}
+
+function formatMonthYear(value) {
+  const match = String(value || '').match(/^(\d{4})-(\d{2})-\d{2}$/);
+  if (!match) {
+    return value || '';
+  }
+
+  const date = new Date(Number(match[1]), Number(match[2]) - 1, 1);
+  const formatted = new Intl.DateTimeFormat('ru-RU', {
+    month: 'long',
+    year: 'numeric',
+  }).format(date);
+
+  return capitalizeFirst(formatted.replace(/\s*г\.$/, ''));
+}
+
+function formatPrintCompletionText(filters) {
+  if (filters.completionPreset === 'allTime') {
+    return 'Не учитывать';
+  }
+
+  if (filters.completionPreset === 'currentMonth' || filters.completionPreset === 'previousMonth') {
+    return formatMonthYear(filters.completionFrom);
+  }
+
+  return `${filters.completionFrom || '...'} - ${filters.completionTo || '...'}`;
+}
+
 function createReportService({ client, config }) {
   async function resolvePositionFieldCode(requestOptions = {}) {
     if (config.taskPositionFieldCode) {
@@ -66,6 +101,7 @@ function createReportService({ client, config }) {
         companyName: companyName || 'не указана',
         companyReportName: buildCompanyReportName(companyName),
         periodText: `${filters.periodFrom} - ${filters.periodTo}`,
+        printCompletionText: formatPrintCompletionText(filters),
         completionText: formatCompletionText(filters),
       },
       filters,

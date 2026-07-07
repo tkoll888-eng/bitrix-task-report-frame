@@ -1,7 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { readContextFromSearch, buildReportQuery } = require('../src/frontend/appState');
-const { parseReportResponseText } = require('../src/frontend/printState');
+const { parseReportResponseText, buildPrintDocumentTitle } = require('../src/frontend/printState');
 
 test('readContextFromSearch supports local query parameters', () => {
   assert.deepEqual(
@@ -93,12 +93,13 @@ test('buildReportQuery preserves commas inside selected tag titles', () => {
   assert.deepEqual(params.getAll('tags'), ['Setup, phase 1', 'Dev']);
 });
 
-test('buildReportQuery defaults completion date filter to all time', () => {
+test('buildReportQuery defaults period and completion date filters to all time', () => {
   const params = buildReportQuery({
     context: { entityTypeId: '184', itemId: '123' },
     filters: {},
   });
 
+  assert.equal(params.get('periodPreset'), 'allTime');
   assert.equal(params.get('completionPreset'), 'allTime');
 });
 
@@ -128,4 +129,28 @@ test('parseReportResponseText returns payload data for valid json', () => {
     success: true,
     data: { rows: [] },
   });
+});
+
+test('buildPrintDocumentTitle uses company and completion period for pdf filename', () => {
+  assert.equal(
+    buildPrintDocumentTitle({
+      header: {
+        companyName: 'ООО "ДОМОФОНЫ ПЛЮС"',
+        printCompletionText: 'Июнь 2026',
+      },
+    }),
+    'ООО ДОМОФОНЫ ПЛЮС Июнь 2026',
+  );
+});
+
+test('buildPrintDocumentTitle falls back to completion text and cleans invalid filename characters', () => {
+  assert.equal(
+    buildPrintDocumentTitle({
+      header: {
+        companyName: 'Дом/Сервис: Север',
+        completionText: '2026-06-01 - 2026-06-30',
+      },
+    }),
+    'Дом Сервис Север 2026-06-01 - 2026-06-30',
+  );
 });

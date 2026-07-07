@@ -105,6 +105,7 @@ test('buildReport loads item, company, tasks, rows and totals', async () => {
     entityTypeId: 184,
     itemId: 123,
     filters: {
+      periodPreset: 'previousMonth',
       periodFrom: '2026-06-01',
       periodTo: '2026-06-30',
     },
@@ -114,7 +115,78 @@ test('buildReport loads item, company, tasks, rows and totals', async () => {
   assert.equal(report.header.companyName, 'ООО Ромашка');
   assert.equal(report.header.companyReportName, 'Отчет по сопровождению ООО Ромашка');
   assert.equal(report.header.completionText, 'Не учитывать');
+  assert.equal(report.header.printCompletionText, 'Не учитывать');
   assert.equal(report.rows.length, 1);
   assert.equal(report.rows[0].positionName, 'Позиция');
   assert.equal(report.totals.plannedText, '1:00');
+});
+
+test('buildReport formats completion month for print period text', async () => {
+  const client = {
+    async getItem() {
+      return { id: 123, title: 'Object' };
+    },
+    async getTaskFields() {
+      return [];
+    },
+    async searchTasks() {
+      return [];
+    },
+  };
+
+  const service = createReportService({
+    client,
+    config: {
+      taskPositionFieldName: 'Position',
+      taskPositionFieldCode: '',
+      publicPortalHost: 'solution24.bitrix24.ru',
+    },
+  });
+
+  const report = await service.buildReport({
+    entityTypeId: 184,
+    itemId: 123,
+    filters: {
+      periodPreset: 'allTime',
+      completionPreset: 'previousMonth',
+    },
+  });
+
+  assert.equal(report.header.printCompletionText, 'Июнь 2026');
+});
+
+test('buildReport keeps exact date range in print period text only for custom completion date', async () => {
+  const client = {
+    async getItem() {
+      return { id: 123, title: 'Object' };
+    },
+    async getTaskFields() {
+      return [];
+    },
+    async searchTasks() {
+      return [];
+    },
+  };
+
+  const service = createReportService({
+    client,
+    config: {
+      taskPositionFieldName: 'Position',
+      taskPositionFieldCode: '',
+      publicPortalHost: 'solution24.bitrix24.ru',
+    },
+  });
+
+  const report = await service.buildReport({
+    entityTypeId: 184,
+    itemId: 123,
+    filters: {
+      periodPreset: 'allTime',
+      completionPreset: 'custom',
+      completionFrom: '2026-06-10',
+      completionTo: '2026-06-20',
+    },
+  });
+
+  assert.equal(report.header.printCompletionText, '2026-06-10 - 2026-06-20');
 });

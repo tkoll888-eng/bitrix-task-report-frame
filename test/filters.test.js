@@ -29,11 +29,11 @@ const rows = [
   },
 ];
 
-test('normalizeFilters applies current month default', () => {
+test('normalizeFilters applies all time period default', () => {
   const filters = normalizeFilters({}, new Date('2026-06-04T10:00:00+02:00'));
-  assert.equal(filters.periodPreset, 'currentMonth');
-  assert.equal(filters.periodFrom, '2026-06-01');
-  assert.equal(filters.periodTo, '2026-06-30');
+  assert.equal(filters.periodPreset, 'allTime');
+  assert.equal(filters.periodFrom, '');
+  assert.equal(filters.periodTo, '');
   assert.equal(filters.completionPreset, 'allTime');
   assert.equal(filters.completionFrom, '');
   assert.equal(filters.completionTo, '');

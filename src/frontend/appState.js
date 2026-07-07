@@ -34,7 +34,7 @@ function buildReportQuery({ context, filters }) {
   const params = new URLSearchParams({
     entityTypeId: String(context.entityTypeId || ''),
     itemId: String(context.itemId || ''),
-    periodPreset: filters.periodPreset || 'currentMonth',
+    periodPreset: filters.periodPreset || 'allTime',
     tagContains: filters.tagContains || '',
     completionPreset: filters.completionPreset || 'allTime',
   });

@@ -34,7 +34,7 @@ function inRange(value, from, to) {
 }
 
 function normalizeFilters(input = {}, now = new Date()) {
-  const periodPreset = input.periodPreset || 'currentMonth';
+  const periodPreset = input.periodPreset || 'allTime';
   const completionPreset = input.completionPreset || 'allTime';
   const periodRange = getPresetRange(periodPreset, input.periodFrom, input.periodTo, now);
   const completionRange = getPresetRange(

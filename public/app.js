@@ -46,7 +46,7 @@
     availableTags: [],
     savedTagSets: readSavedTagSets(),
     isTagFilterOpen: false,
-    sort: { key: '', direction: 'asc' },
+    sort: { key: 'closedDate', direction: 'desc' },
     pagination: { page: 1, pageSize: 20 },
   };
 
@@ -486,18 +486,30 @@
     return row[key] || '';
   }
 
-  function compareRows(left, right, key) {
+  function compareRows(left, right, key, direction) {
     const leftValue = getSortValue(left, key);
     const rightValue = getSortValue(right, key);
 
-    if (typeof leftValue === 'number' || typeof rightValue === 'number') {
-      return Number(leftValue || 0) - Number(rightValue || 0);
+    if (key === 'closedDate') {
+      if (!leftValue && rightValue) {
+        return -1;
+      }
+      if (leftValue && !rightValue) {
+        return 1;
+      }
     }
 
-    return String(leftValue || '').localeCompare(String(rightValue || ''), 'ru', {
-      numeric: true,
-      sensitivity: 'base',
-    });
+    let result = 0;
+    if (typeof leftValue === 'number' || typeof rightValue === 'number') {
+      result = Number(leftValue || 0) - Number(rightValue || 0);
+    } else {
+      result = String(leftValue || '').localeCompare(String(rightValue || ''), 'ru', {
+        numeric: true,
+        sensitivity: 'base',
+      });
+    }
+
+    return result * direction;
   }
 
   function getSortedRows(rows) {
@@ -507,7 +519,7 @@
 
     const direction = state.sort.direction === 'desc' ? -1 : 1;
     return rows.slice().sort(function (left, right) {
-      return compareRows(left, right, state.sort.key) * direction;
+      return compareRows(left, right, state.sort.key, direction);
     });
   }
 
@@ -600,6 +612,130 @@
     root.appendChild(line);
   }
 
+  function cleanFilenamePart(value) {
+    return String(value || '')
+      .replace(/[<>:"/\\|?*\u0000-\u001f]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  function buildPrintDocumentTitle(report) {
+    const header = (report && report.header) || {};
+    const companyName = cleanFilenamePart(header.companyName || 'Контрагент');
+    const period = cleanFilenamePart(
+      header.printCompletionText || header.completionText || header.periodText || 'Период',
+    );
+
+    return cleanFilenamePart(`${companyName} ${period}`) || 'Отчет по задачам';
+  }
+
+  function escapePrintHtml(value) {
+    return String(value || '').replace(/[&<>"']/g, function (char) {
+      return {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;',
+      }[char];
+    });
+  }
+
+  function buildPrintRowsHtml(rows) {
+    return (rows || []).map(function (row) {
+      return `
+        <tr>
+          <td>${escapePrintHtml(row.createdDateText)}</td>
+          <td>${escapePrintHtml(row.statusLabel)}</td>
+          <td class="title-cell">${escapePrintHtml(row.title)}</td>
+          <td class="numeric">${escapePrintHtml(row.plannedText || '0:00')}</td>
+          <td>${escapePrintHtml(row.closedDateText || '—')}</td>
+          <td>${escapePrintHtml(row.deadlineText || '—')}</td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  function buildPrintDocumentHtml(report) {
+    const header = (report && report.header) || {};
+    const totals = (report && report.totals) || {};
+    const rows = (report && report.rows) || [];
+    const title = buildPrintDocumentTitle(report);
+
+    return `<!doctype html>
+      <html lang="ru">
+        <head>
+          <meta charset="utf-8">
+          <title>${escapePrintHtml(title)}</title>
+          <style>
+            @page { size: A4 portrait; margin: 10mm; }
+            body { margin: 0; color: #111827; font-family: Arial, sans-serif; font-size: 9pt; }
+            h1 { margin: 0 0 4mm; font-size: 14pt; line-height: 1.2; }
+            .meta { display: grid; gap: 2mm; margin-bottom: 6mm; }
+            table { width: 100%; border-collapse: collapse; table-layout: auto; font-size: 8pt; }
+            th, td { padding: 2mm 1.5mm; border-bottom: 1px solid #d7dde8; vertical-align: top; }
+            th { text-align: left; color: #27415f; font-weight: 600; }
+            .title-cell { width: 100%; word-break: break-word; }
+            .numeric { white-space: nowrap; text-align: right; }
+            .totals-strip { display: grid; gap: 1mm; padding-top: 4mm; font-size: 9pt; }
+            .totals-item, .totals-count { display: grid; grid-template-columns: max-content max-content; gap: 3mm; }
+            strong { font-weight: 700; }
+          </style>
+        </head>
+        <body>
+          <section class="meta">
+            <h1>${escapePrintHtml(header.companyReportName || 'Отчет по задачам')}</h1>
+            <div>Проект: <strong>${escapePrintHtml(header.objectName || '—')}</strong></div>
+            <div>Компания: <strong>${escapePrintHtml(header.companyName || '—')}</strong></div>
+            <div>Период: <strong>${escapePrintHtml(header.printCompletionText || header.completionText || '—')}</strong></div>
+          </section>
+          <table>
+            <thead>
+              <tr>
+                <th>Дата создания</th>
+                <th>Статус</th>
+                <th>Название</th>
+                <th>Время</th>
+                <th>Дата завершения</th>
+                <th>Крайний срок</th>
+              </tr>
+            </thead>
+            <tbody>${buildPrintRowsHtml(rows)}</tbody>
+          </table>
+          <section class="totals-strip">
+            <div class="totals-item"><span>Трудозатраты</span><strong>${escapePrintHtml(totals.plannedText || '0:00')}</strong></div>
+            <div class="totals-count"><span>Количество задач</span><strong>${escapePrintHtml(String(rows.length))}</strong></div>
+          </section>
+        </body>
+      </html>`;
+  }
+
+  function openPrintDocument() {
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      showMessage('Браузер заблокировал окно печати. Разрешите всплывающие окна для приложения и повторите печать.', 'error');
+      return;
+    }
+
+    printWindow.document.open();
+    printWindow.document.write(buildPrintDocumentHtml(state.report));
+    printWindow.document.close();
+    printWindow.setTimeout(function () {
+      printWindow.focus();
+      printWindow.print();
+    }, 250);
+  }
+
+  function printCurrentReport() {
+    if (state.report) {
+      document.title = buildPrintDocumentTitle(state.report);
+      openPrintDocument();
+      return;
+    }
+
+    showMessage('Сначала загрузите отчет, затем повторите печать.', 'error');
+  }
+
   function renderPrintMeta(report) {
     const root = document.getElementById('printMeta');
     if (!root) {
@@ -612,9 +748,11 @@
     heading.textContent = (report.header && report.header.companyReportName) || 'Отчет по задачам';
     root.appendChild(heading);
 
-    appendPrintMetaLine(root, 'Объект', report.header && report.header.objectName);
+    appendPrintMetaLine(root, 'Проект', report.header && report.header.objectName);
     appendPrintMetaLine(root, 'Компания', report.header && report.header.companyName);
-    appendPrintMetaLine(root, 'Период', report.header && (report.header.completionText || report.header.periodText));
+    appendPrintMetaLine(root, 'Период', report.header && (
+      report.header.printCompletionText || report.header.completionText
+    ));
     scheduleFrameResize();
   }
 
@@ -1107,6 +1245,7 @@
 
   function renderReport(report) {
     state.report = report;
+    document.title = buildPrintDocumentTitle(report);
     renderPrintMeta(report);
     document.getElementById('planned-total').textContent = report.totals.plannedText || '0:00';
     document.getElementById('spent-total').textContent = report.totals.spentText || '0:00';
@@ -1252,7 +1391,7 @@
   });
 
   document.getElementById('printButton').addEventListener('click', function () {
-    window.print();
+    printCurrentReport();
   });
 
   bindRangePickers();
