@@ -11,6 +11,11 @@
       <section class="report-shell">
         <div class="toolbar">
           <form id="filtersForm" class="filters" aria-label="Фильтры отчета">
+            <label id="manualProjectField" class="filter-field filter-field-project" data-manual-project-field hidden>
+              <span>ID проекта</span>
+              <input id="manualProjectId" type="number" inputmode="numeric" min="1" placeholder="Введите ID">
+            </label>
+
             <div class="filter-group" data-filter-group="period">
               <label class="filter-field">
                 <span class="filter-caption-row">

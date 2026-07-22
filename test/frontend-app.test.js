@@ -1,6 +1,12 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { readContextFromSearch, buildReportQuery } = require('../src/frontend/appState');
+const {
+  readContextFromSearch,
+  buildReportQuery,
+  isManualProjectMode,
+  resolveReportContext,
+  MANUAL_MODE_ENTITY_TYPE_ID,
+} = require('../src/frontend/appState');
 const { parseReportResponseText, buildPrintDocumentTitle } = require('../src/frontend/printState');
 
 test('readContextFromSearch supports local query parameters', () => {
@@ -27,6 +33,34 @@ test('readContextFromSearch extracts VibeCode lowercase placement context', () =
   assert.deepEqual(
     readContextFromSearch(search),
     { entityTypeId: '184', itemId: 777 },
+  );
+});
+
+test('manual mode is active when smart-process item id is missing', () => {
+  assert.equal(isManualProjectMode({}), true);
+  assert.equal(isManualProjectMode({ entityTypeId: '184' }), true);
+  assert.equal(isManualProjectMode({ entityTypeId: '184', itemId: '123' }), false);
+});
+
+test('resolveReportContext waits for manual project id before loading report', () => {
+  assert.equal(resolveReportContext({ context: {}, manualProjectId: '' }), null);
+  assert.equal(resolveReportContext({ context: {}, manualProjectId: '   ' }), null);
+});
+
+test('resolveReportContext uses internal smart-process type for manual project id', () => {
+  assert.deepEqual(
+    resolveReportContext({ context: {}, manualProjectId: '777' }),
+    { entityTypeId: MANUAL_MODE_ENTITY_TYPE_ID, itemId: '777' },
+  );
+});
+
+test('resolveReportContext preserves placement or URL context when item id exists', () => {
+  assert.deepEqual(
+    resolveReportContext({
+      context: { entityTypeId: '184', itemId: '123' },
+      manualProjectId: '777',
+    }),
+    { entityTypeId: '184', itemId: '123' },
   );
 });
 

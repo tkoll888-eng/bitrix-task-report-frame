@@ -96,6 +96,26 @@ test('GET / returns compact preview report shell', async () => {
   assert.doesNotMatch(response.text, /Компания/);
 });
 
+test('main shell contains hidden manual project id field', async () => {
+  const app = loadAppWithoutApiKey();
+  const response = await request(app).get('/');
+
+  assert.equal(response.status, 200);
+  assert.match(response.text, /id="manualProjectField"/);
+  assert.match(response.text, /id="manualProjectId"/);
+  assert.match(response.text, /ID проекта/);
+  assert.match(response.text, /data-manual-project-field/);
+});
+
+test('manual project type id is not exposed as a visible control', async () => {
+  const app = loadAppWithoutApiKey();
+  const response = await request(app).get('/');
+
+  assert.equal(response.status, 200);
+  assert.doesNotMatch(response.text, /entityTypeId[^<]*(input|select)/i);
+  assert.doesNotMatch(response.text, /Тип смарт-процесса/);
+});
+
 test('status message is rendered below filters to avoid layout jump while filtering', async () => {
   const app = loadAppWithoutApiKey();
   const response = await request(app).get('/');

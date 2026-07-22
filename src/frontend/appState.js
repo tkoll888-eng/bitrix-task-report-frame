@@ -1,3 +1,5 @@
+const MANUAL_MODE_ENTITY_TYPE_ID = '184';
+
 function readContextFromSearch(search) {
   const params = new URLSearchParams(search);
   const getParam = (name) => params.get(name) || params.get(name.toLowerCase()) || params.get(name.toUpperCase());
@@ -21,6 +23,29 @@ function readContextFromSearch(search) {
   }
 
   return {};
+}
+
+function isManualProjectMode(context = {}) {
+  return !context.itemId;
+}
+
+function resolveReportContext({ context = {}, manualProjectId = '' }) {
+  if (context.entityTypeId && context.itemId) {
+    return {
+      entityTypeId: String(context.entityTypeId),
+      itemId: String(context.itemId),
+    };
+  }
+
+  const normalizedManualProjectId = String(manualProjectId || '').trim();
+  if (!normalizedManualProjectId) {
+    return null;
+  }
+
+  return {
+    entityTypeId: MANUAL_MODE_ENTITY_TYPE_ID,
+    itemId: normalizedManualProjectId,
+  };
 }
 
 function buildReportQuery({ context, filters }) {
@@ -73,4 +98,10 @@ function buildReportQuery({ context, filters }) {
   return params;
 }
 
-module.exports = { readContextFromSearch, buildReportQuery };
+module.exports = {
+  MANUAL_MODE_ENTITY_TYPE_ID,
+  readContextFromSearch,
+  buildReportQuery,
+  isManualProjectMode,
+  resolveReportContext,
+};
