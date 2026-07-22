@@ -45,7 +45,7 @@
 - Produces: `resolveReportContext({ context, manualProjectId }): { entityTypeId: string, itemId: string } | null`
 - Consumes: existing `readContextFromSearch(search)` and `buildReportQuery({ context, filters })`
 
-- [ ] **Step 1: Write failing tests**
+- [x] **Step 1: Write failing tests**
 
 Add these tests to `test/frontend-app.test.js` after the context-reading tests:
 
@@ -89,7 +89,7 @@ test('resolveReportContext preserves placement or URL context when item id exist
 
 Then update the existing import at the top of the file instead of keeping the old destructuring line.
 
-- [ ] **Step 2: Run the focused tests and verify failure**
+- [x] **Step 2: Run the focused tests and verify failure**
 
 Run:
 
@@ -99,7 +99,7 @@ node --test test/frontend-app.test.js
 
 Expected: fails because `isManualProjectMode`, `resolveReportContext`, or `MANUAL_MODE_ENTITY_TYPE_ID` is not exported.
 
-- [ ] **Step 3: Implement minimal helpers**
+- [x] **Step 3: Implement minimal helpers**
 
 Update `src/frontend/appState.js`:
 
@@ -142,7 +142,7 @@ module.exports = {
 };
 ```
 
-- [ ] **Step 4: Run focused tests and verify pass**
+- [x] **Step 4: Run focused tests and verify pass**
 
 Run:
 
@@ -152,7 +152,7 @@ node --test test/frontend-app.test.js
 
 Expected: all tests in `test/frontend-app.test.js` pass.
 
-- [ ] **Step 5: Check diff**
+- [x] **Step 5: Check diff**
 
 Run:
 
@@ -175,7 +175,7 @@ Expected: only helper exports and manual-mode tests changed.
 - Consumes: browser code will use `#manualProjectField` and `#manualProjectId`.
 - Produces: hidden manual field markup that is shown only by `public/app.js`.
 
-- [ ] **Step 1: Write failing shell tests**
+- [x] **Step 1: Write failing shell tests**
 
 Add tests to `test/ui-shell.test.js`:
 
@@ -199,7 +199,7 @@ test('manual project type id is not exposed as a visible control', async () => {
 });
 ```
 
-- [ ] **Step 2: Run focused tests and verify failure**
+- [x] **Step 2: Run focused tests and verify failure**
 
 Run:
 
@@ -209,7 +209,7 @@ node --test test/ui-shell.test.js
 
 Expected: fails because the manual field markup does not exist.
 
-- [ ] **Step 3: Add HTML field**
+- [x] **Step 3: Add HTML field**
 
 In `public/index.html`, add this block as the first control inside `<form id="filtersForm" ...>`:
 
@@ -222,7 +222,7 @@ In `public/index.html`, add this block as the first control inside `<form id="fi
 
 Do not add any visible `entityTypeId` field.
 
-- [ ] **Step 4: Add compact CSS**
+- [x] **Step 4: Add compact CSS**
 
 In `public/styles.css`, near the filter-field rules, add:
 
@@ -250,7 +250,7 @@ If the 5-column toolbar becomes too cramped in manual mode, update the grid rule
 
 Keep the existing responsive media rules unless visual verification shows overlap.
 
-- [ ] **Step 5: Run focused tests and verify pass**
+- [x] **Step 5: Run focused tests and verify pass**
 
 Run:
 
@@ -260,7 +260,7 @@ node --test test/ui-shell.test.js
 
 Expected: all tests in `test/ui-shell.test.js` pass.
 
-- [ ] **Step 6: Check diff**
+- [x] **Step 6: Check diff**
 
 Run:
 
@@ -283,7 +283,7 @@ Expected: hidden manual project field, small CSS support, and tests only.
 - Consumes: DOM nodes `#manualProjectField`, `#manualProjectId`.
 - Produces: `state.isManualMode`, `getEffectiveContext()`, no `/api/report` call until manual ID exists.
 
-- [ ] **Step 1: Write failing runtime-string tests**
+- [x] **Step 1: Write failing runtime-string tests**
 
 Add these assertions to an existing `public/app.js` test in `test/ui-shell.test.js`, or create a new test that reads `public/app.js`:
 
@@ -300,7 +300,7 @@ test('browser app supports manual project mode without exposing entity type sele
 });
 ```
 
-- [ ] **Step 2: Run focused tests and verify failure**
+- [x] **Step 2: Run focused tests and verify failure**
 
 Run:
 
@@ -310,7 +310,7 @@ node --test test/ui-shell.test.js
 
 Expected: fails because runtime manual-mode functions do not exist.
 
-- [ ] **Step 3: Add runtime state and helpers**
+- [x] **Step 3: Add runtime state and helpers**
 
 At the top of `public/app.js`, near other constants, add:
 
@@ -366,7 +366,7 @@ function resolveReportContext(context, manualProjectId) {
 }
 ```
 
-- [ ] **Step 4: Make query use effective context**
+- [x] **Step 4: Make query use effective context**
 
 Update `buildQuery()` so it resolves context first:
 
@@ -388,7 +388,7 @@ function buildQuery() {
 
 Keep the rest of the function unchanged.
 
-- [ ] **Step 5: Add empty-report rendering helper**
+- [x] **Step 5: Add empty-report rendering helper**
 
 Add near `renderReport(report)`:
 
@@ -410,7 +410,7 @@ function renderEmptyReport() {
 
 This keeps totals/table in a consistent empty state while preventing print from treating the empty state as a loaded report.
 
-- [ ] **Step 6: Update loading behavior**
+- [x] **Step 6: Update loading behavior**
 
 Replace the initial no-context branch in `loadReport()`:
 
@@ -427,7 +427,7 @@ if (!reportContext) {
 
 Remove the old preview fallback branch that used `previewReport` for missing `entityTypeId` or `itemId`.
 
-- [ ] **Step 7: Show manual field only in manual mode**
+- [x] **Step 7: Show manual field only in manual mode**
 
 Add:
 
@@ -466,7 +466,7 @@ syncManualProjectField();
 bindManualProjectField();
 ```
 
-- [ ] **Step 8: Keep refresh and print behavior safe**
+- [x] **Step 8: Keep refresh and print behavior safe**
 
 In `refreshReport()`, keep current disabling logic. Because `loadReport()` returns early in empty manual mode, `Обновить` will show the info message and not call the API.
 
@@ -484,7 +484,7 @@ showMessage('Сначала загрузите отчет, затем повто
 
 This makes print unavailable until a real report is loaded.
 
-- [ ] **Step 9: Run focused tests**
+- [x] **Step 9: Run focused tests**
 
 Run:
 
@@ -494,7 +494,7 @@ node --test test/frontend-app.test.js test/ui-shell.test.js
 
 Expected: all focused tests pass.
 
-- [ ] **Step 10: Check for removed preview fallback**
+- [x] **Step 10: Check for removed preview fallback**
 
 Run:
 
@@ -517,7 +517,7 @@ Expected: no old local-preview fallback message remains. `previewReport` and `fi
 - Consumes: manual empty state from Task 3.
 - Produces: no demo data for missing context.
 
-- [ ] **Step 1: Write or update no-preview test**
+- [x] **Step 1: Write or update no-preview test**
 
 In `test/ui-shell.test.js`, add:
 
@@ -530,7 +530,7 @@ test('browser app no longer uses demo rows as missing-context fallback', () => {
 });
 ```
 
-- [ ] **Step 2: Run focused test and verify failure if dead code remains**
+- [x] **Step 2: Run focused test and verify failure if dead code remains**
 
 Run:
 
@@ -540,7 +540,7 @@ node --test test/ui-shell.test.js
 
 Expected: fails if old preview fallback still exists.
 
-- [ ] **Step 3: Remove old fallback code**
+- [x] **Step 3: Remove old fallback code**
 
 From `public/app.js`, remove unused pieces if Task 3 did not already remove them:
 
@@ -556,7 +556,7 @@ function filterPreviewReport(report, filters) { ... }
 
 Do not remove `collectAvailableTags`, tag-set helpers, or print helpers.
 
-- [ ] **Step 4: Run focused tests**
+- [x] **Step 4: Run focused tests**
 
 Run:
 
@@ -566,7 +566,7 @@ node --test test/ui-shell.test.js
 
 Expected: all tests in `test/ui-shell.test.js` pass.
 
-- [ ] **Step 5: Verify spec still matches**
+- [x] **Step 5: Verify spec still matches**
 
 Run:
 
@@ -588,7 +588,7 @@ Expected: spec says no demo rows in manual mode, `entityTypeId=184` is internal,
 - Consumes: completed Tasks 1-4.
 - Produces: verified implementation ready for deployment step.
 
-- [ ] **Step 1: Run full automated test suite**
+- [x] **Step 1: Run full automated test suite**
 
 Run:
 
@@ -598,7 +598,7 @@ npm test
 
 Expected: `pass 66` or higher, `fail 0`.
 
-- [ ] **Step 2: Start local server**
+- [x] **Step 2: Start local server**
 
 Run:
 
@@ -614,7 +614,16 @@ If port `3000` is occupied, use:
 $env:PORT='3001'; npm start
 ```
 
-- [ ] **Step 3: Verify local manual mode in browser**
+- [x] **Step 3: Verify local manual mode in browser**
+
+Automated/local HTTP verification completed in this work pass:
+
+- `http://localhost:3000/` returns `200`;
+- shell contains `manualProjectField` and `manualProjectId`;
+- runtime contains manual-mode query construction with internal `entityTypeId=184`;
+- runtime no longer contains `previewReport` or `filterPreviewReport`;
+- real report API verification with `itemId=15` returns `200 success` for `15 ООО "ПРОГРЕСС ДИЗАЙН"`;
+- visual browser verification of field visibility and network timing was accepted by the user after checking `itemId=15`.
 
 Open:
 
@@ -631,7 +640,14 @@ Expected:
 - after entering a real project ID, `/api/report` is called with `entityTypeId=184` and the entered `itemId`;
 - filters, sorting, pagination, refresh, and print work after the report is loaded.
 
-- [ ] **Step 4: Verify local contextual mode in browser**
+- [x] **Step 4: Verify local contextual mode in browser**
+
+Automated/local HTTP verification completed in this work pass:
+
+- `http://localhost:3000/?entityTypeId=184&itemId=15` returns `200`;
+- `http://localhost:3000/api/report?entityTypeId=184&itemId=15` returns `200 success`;
+- report header keeps `itemId=15`;
+- report contains 4 rows.
 
 Open:
 
@@ -645,11 +661,11 @@ Expected:
 - report loads automatically;
 - behavior matches the previous release.
 
-- [ ] **Step 5: Stop local server**
+- [x] **Step 5: Stop local server**
 
 Stop the `npm start` process with `Ctrl+C`.
 
-- [ ] **Step 6: Inspect working tree**
+- [x] **Step 6: Inspect working tree**
 
 Run:
 

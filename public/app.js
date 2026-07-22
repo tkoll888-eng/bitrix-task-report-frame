@@ -5,39 +5,7 @@
   const PAGE_SIZE_OPTIONS = [20, 30, 50];
   const FRAME_RESIZE_RETRY_LIMIT = 20;
   const FRAME_RESIZE_PADDING = 32;
-
-  const previewReport = {
-    totals: {
-      plannedText: '119:00',
-      spentText: '84:40',
-    },
-    rows: [
-      {
-        createdDateText: '03.03.2024',
-        status: 5,
-        statusLabel: 'Завершена',
-        title: 'Разработка технического задания по модулю складского учета',
-        titleUrl: '#task-1',
-        plannedText: '16:00',
-        spentText: '18:30',
-        closedDateText: '15.03.2024',
-        deadlineText: '14.03.2024',
-        tags: ['ТЗ', 'Склад'],
-      },
-      {
-        createdDateText: '06.03.2024',
-        status: 3,
-        statusLabel: 'Выполняется',
-        title: 'Внедрение CRM-системы в отдел продаж',
-        titleUrl: '#task-3',
-        plannedText: '40:00',
-        spentText: '22:15',
-        closedDateText: '',
-        deadlineText: '31.03.2024',
-        tags: ['CRM', 'IT', 'Продажи'],
-      },
-    ],
-  };
+  const MANUAL_MODE_ENTITY_TYPE_ID = '184';
 
   const state = {
     context: readContext(),
@@ -46,6 +14,7 @@
     availableTags: [],
     savedTagSets: readSavedTagSets(),
     isTagFilterOpen: false,
+    isManualMode: false,
     sort: { key: 'closedDate', direction: 'desc' },
     pagination: { page: 1, pageSize: 20 },
   };
@@ -89,6 +58,34 @@
     }
 
     return {};
+  }
+
+  function isManualProjectMode(context) {
+    return !context.itemId;
+  }
+
+  function readManualProjectId() {
+    const input = document.getElementById('manualProjectId');
+    return input ? String(input.value || '').trim() : '';
+  }
+
+  function resolveReportContext(context, manualProjectId) {
+    if (context.entityTypeId && context.itemId) {
+      return {
+        entityTypeId: String(context.entityTypeId),
+        itemId: String(context.itemId),
+      };
+    }
+
+    const normalizedManualProjectId = String(manualProjectId || '').trim();
+    if (!normalizedManualProjectId) {
+      return null;
+    }
+
+    return {
+      entityTypeId: MANUAL_MODE_ENTITY_TYPE_ID,
+      itemId: normalizedManualProjectId,
+    };
   }
 
   function toDateOnly(date) {
@@ -310,28 +307,6 @@
     return normalizeTagSet(allTags);
   }
 
-  function filterPreviewReport(report, filters) {
-    const selectedTags = normalizeTagSet(filters.tags || []).map(function (tag) {
-      return tag.toLowerCase();
-    });
-
-    if (selectedTags.length === 0) {
-      return report;
-    }
-
-    return {
-      totals: report.totals,
-      rows: (report.rows || []).filter(function (row) {
-        return (row.tags || []).some(function (tag) {
-          const normalizedTag = String(tag || '').toLowerCase();
-          return selectedTags.some(function (selectedTag) {
-            return normalizedTag.includes(selectedTag);
-          });
-        });
-      }),
-    };
-  }
-
   function showMessage(text, tone) {
     const node = document.getElementById('message');
     if (!node) {
@@ -444,9 +419,10 @@
 
   function buildQuery() {
     const filters = readFilters();
+    const reportContext = resolveReportContext(state.context, readManualProjectId()) || {};
     const params = new URLSearchParams({
-      entityTypeId: String(state.context.entityTypeId || ''),
-      itemId: String(state.context.itemId || ''),
+      entityTypeId: String(reportContext.entityTypeId || ''),
+      itemId: String(reportContext.itemId || ''),
       periodPreset: filters.periodPreset,
       tagContains: filters.tagContains,
       completionPreset: filters.completionPreset,
@@ -1154,6 +1130,32 @@
     });
   }
 
+  function syncManualProjectField() {
+    state.isManualMode = isManualProjectMode(state.context);
+    const field = document.getElementById('manualProjectField');
+    if (field) {
+      field.hidden = !state.isManualMode;
+    }
+  }
+
+  function bindManualProjectField() {
+    const input = document.getElementById('manualProjectId');
+    if (!input) {
+      return;
+    }
+
+    input.addEventListener('change', function () {
+      loadReportFromFirstPage();
+    });
+
+    input.addEventListener('keydown', function (event) {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        loadReportFromFirstPage();
+      }
+    });
+  }
+
   function bindSorting() {
     document.querySelectorAll('[data-sort-key]').forEach(function (button) {
       button.addEventListener('click', function () {
@@ -1313,15 +1315,26 @@
     scheduleFrameResize();
   }
 
+  function renderEmptyReport() {
+    renderReport({
+      header: {},
+      filters: readFilters(),
+      rows: [],
+      totals: {
+        plannedText: '0:00',
+        spentText: '0:00',
+      },
+    });
+    state.report = null;
+    setAvailableTags({ rows: [] });
+  }
+
   async function loadReport() {
-    if (!state.context.entityTypeId || !state.context.itemId) {
-      const filteredPreviewReport = filterPreviewReport(previewReport, readFilters());
-      renderReport(filteredPreviewReport);
-      setAvailableTags(previewReport);
+    const reportContext = resolveReportContext(state.context, readManualProjectId());
+    if (!reportContext) {
+      renderEmptyReport();
       renderTagFilter();
-      showMessage(filteredPreviewReport.rows.length
-        ? 'Для локальной проверки добавьте в URL параметры entityTypeId и itemId, например ?entityTypeId=184&itemId=123.'
-        : 'По выбранным фильтрам задачи не найдены.');
+      showMessage('Введите ID проекта, чтобы загрузить отчет по задачам.');
       scheduleFrameResize();
       return;
     }
@@ -1396,6 +1409,8 @@
 
   bindRangePickers();
   bindFiltersForm();
+  syncManualProjectField();
+  bindManualProjectField();
   bindStatusPicker();
   bindTagFilter();
   bindSorting();

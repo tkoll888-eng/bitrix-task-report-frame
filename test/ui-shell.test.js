@@ -116,6 +116,24 @@ test('manual project type id is not exposed as a visible control', async () => {
   assert.doesNotMatch(response.text, /Тип смарт-процесса/);
 });
 
+test('browser app supports manual project mode without exposing entity type selector', () => {
+  const appJs = fs.readFileSync(path.join(__dirname, '..', 'public', 'app.js'), 'utf8');
+
+  assert.match(appJs, /MANUAL_MODE_ENTITY_TYPE_ID\s*=\s*'184'/);
+  assert.match(appJs, /function isManualProjectMode/);
+  assert.match(appJs, /function resolveReportContext/);
+  assert.match(appJs, /manualProjectId/);
+  assert.match(appJs, /Введите ID проекта, чтобы загрузить отчет по задачам\./);
+  assert.doesNotMatch(appJs, /Тип смарт-процесса/);
+});
+
+test('browser app no longer uses demo rows as missing-context fallback', () => {
+  const appJs = fs.readFileSync(path.join(__dirname, '..', 'public', 'app.js'), 'utf8');
+
+  assert.doesNotMatch(appJs, /Для локальной проверки добавьте в URL параметры/);
+  assert.doesNotMatch(appJs, /filterPreviewReport/);
+});
+
 test('status message is rendered below filters to avoid layout jump while filtering', async () => {
   const app = loadAppWithoutApiKey();
   const response = await request(app).get('/');
