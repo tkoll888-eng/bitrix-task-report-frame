@@ -2,6 +2,9 @@ param(
   [Parameter(Mandatory=$true)][string]$ServerId,
   [Parameter(Mandatory=$true)][Alias('ApiKey')][string]$DeployApiKey,
   [Parameter(Mandatory=$true)][string]$AppKey,
+  [string]$DisplayName = 'Project Task Report',
+  [string]$Description = 'Embedded Bitrix24 smart-process task report with filters and print view.',
+  [string]$Changelog = 'Fixed app-key authorization and user-session access checks. Added reviewer documentation.',
   [string]$PersonalApiKey = '',
   [switch]$IncludePersonalDiagnosticsKey
 )
@@ -43,6 +46,9 @@ $bodyJson = @{
   install = 'npm ci --omit=dev'
   start = 'node server.js'
   port = 3000
+  displayName = $DisplayName
+  description = $Description
+  changelog = $Changelog
   env = $runtimeEnv
 } | ConvertTo-Json -Depth 10
 $bodyBytes = [System.Text.Encoding]::UTF8.GetBytes($bodyJson)
