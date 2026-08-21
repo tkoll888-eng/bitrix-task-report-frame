@@ -31,7 +31,10 @@ if (process.env.VIBECODE_APP_KEY || process.env.VIBECODE_API_KEY) {
     appKey: config.vibecodeAppKey,
   });
   const reportService = createReportService({ client, config });
-  app.use('/api/report', createReportRouter({ reportService }));
+  app.use('/api/report', createReportRouter({
+    reportService,
+    requireAuthorization: !config.allowPersonalApiKey,
+  }));
 }
 
 if (require.main === module) {

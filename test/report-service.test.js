@@ -99,6 +99,7 @@ test('buildReport loads item, company, tasks, rows and totals', async () => {
       taskPositionFieldCode: '',
       publicPortalHost: 'solution24.bitrix24.ru',
     },
+    now: () => new Date('2026-07-11T10:00:00+02:00'),
   });
 
   const report = await service.buildReport({
@@ -141,6 +142,7 @@ test('buildReport formats completion month for print period text', async () => {
       taskPositionFieldCode: '',
       publicPortalHost: 'solution24.bitrix24.ru',
     },
+    now: () => new Date('2026-07-11T10:00:00+02:00'),
   });
 
   const report = await service.buildReport({

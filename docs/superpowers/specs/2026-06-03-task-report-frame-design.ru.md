@@ -328,7 +328,7 @@ Frame должен использовать всю доступную высот
 
 Для диагностики используем такие правила:
 
-- `401` в локальном режиме означает проблему с `VIBECODE_API_KEY` или выбором ключа. Локальный режим без `X-Vibe-Authorization` должен использовать `VIBECODE_API_KEY`, даже если в `.env` также указан `VIBECODE_APP_KEY`.
+- `401` в локальном диагностическом режиме означает проблему с `VIBECODE_API_KEY`, `VIBECODE_ALLOW_PERSONAL_API_KEY=true` или выбором ключа. Без этого явного флага backend не должен использовать personal key.
 - `401` при прямом внешнем запросе к deployed `/api/report` без Bitrix24 frame-сессии ожидаем и не считаем поломкой frame-режима.
 - `404` от VibeCode при `GET /items/{entityTypeId}/{itemId}` обычно означает, что передан несуществующий или неверный `itemId` для указанного `entityTypeId`.
 - `422` от VibeCode означает, что API отклонил параметры или тело запроса. В этом случае нельзя гадать по одному статусу: нужно вывести детали ответа VibeCode и проверить endpoint, поля фильтра и формат тела запроса.
@@ -347,7 +347,7 @@ Frame должен использовать всю доступную высот
 - Проверить, что уникальные наборы тегов сохраняются и доступны для повторного выбора.
 - Проверить быстрые фильтры и ручной диапазон для `Дата завершения`.
 - Проверить, что `Дата завершения` по умолчанию установлена в `Не учитывать`.
-- Проверить локальный режим с `.env`, где одновременно указаны `VIBECODE_API_KEY` и `VIBECODE_APP_KEY`: без `X-Vibe-Authorization` backend должен ходить в VibeCode через `VIBECODE_API_KEY`.
+- Проверить локальный диагностический режим с `.env`, где одновременно указаны `VIBECODE_API_KEY`, `VIBECODE_APP_KEY` и `VIBECODE_ALLOW_PERSONAL_API_KEY=true`: без `X-Vibe-Authorization` backend должен ходить в VibeCode через `VIBECODE_API_KEY`.
 - Проверить, что ошибки VibeCode `401`, `404` и `422` выводят подробное сообщение из ответа API, а не только голый HTTP-статус.
 - Проверить корректное сопоставление статусов Bitrix24.
 - Проверить, что можно выбрать несколько статусов одновременно.
@@ -384,9 +384,11 @@ Frame должен использовать всю доступную высот
 ## Current VibeCode Embedded Auth Correction
 
 - Embedded Bitrix24 mode uses `VIBECODE_APP_KEY` (`vibe_app_...`), not `BITRIX24_WEBHOOK_URL`.
-- Local/server discovery can still use `VIBECODE_API_KEY` (`vibe_api_...`).
+- Production deploy must pass the real `vibe_app_...` value as `VIBECODE_APP_KEY` and must not pass `VIBECODE_API_KEY` into the server runtime by default.
+- Local/server discovery can still use `VIBECODE_API_KEY` (`vibe_api_...`) only when `VIBECODE_ALLOW_PERSONAL_API_KEY=true` is set explicitly.
+- When both `VIBECODE_APP_KEY` and `VIBECODE_API_KEY` are present without that explicit diagnostics flag, the app key is the runtime default.
 - VibeCode Gateway passes the user session to the backend as `X-Vibe-Authorization: Bearer vibe_session_...`.
 - The backend forwards that value to VibeCode API as `Authorization: Bearer ...` together with `X-Api-Key: <VIBECODE_APP_KEY>`.
-- Direct deployed `/api/report` checks outside Bitrix24 frame do not have the embedded session and may return `401`; use the local `vibe_api` path for server-to-server diagnostics.
+- Direct deployed `/api/report` checks outside Bitrix24 frame do not have the embedded session and may return `401`; use the explicit local diagnostics path for server-to-server checks.
 - Placement publication is done through VibeCode app publishing: `POST /v1/apps/:id/publish` with `CRM_DYNAMIC_<entityTypeId>_DETAIL_TAB` in `placements`.
 - Direct Bitrix24 `placement.bind` through incoming webhook is not the active project path.

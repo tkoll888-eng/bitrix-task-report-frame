@@ -7,6 +7,7 @@ const request = require('supertest');
 function loadAppWithoutApiKey() {
   delete process.env.VIBECODE_API_KEY;
   delete process.env.VIBECODE_APP_KEY;
+  delete process.env.VIBECODE_ALLOW_PERSONAL_API_KEY;
   delete require.cache[require.resolve('../server')];
   return require('../server').app;
 }
@@ -14,6 +15,7 @@ function loadAppWithoutApiKey() {
 function loadAppWithAppKeyOnly() {
   process.env.VIBECODE_API_KEY = '';
   process.env.VIBECODE_APP_KEY = 'vibe_app_test';
+  process.env.VIBECODE_ALLOW_PERSONAL_API_KEY = '';
   process.env.VIBECODE_API_BASE = 'https://example.test/v1';
   delete require.cache[require.resolve('../server')];
   return require('../server').app;
@@ -34,8 +36,8 @@ test('GET /api/report route is mounted when only VIBECODE_APP_KEY is configured'
   const app = loadAppWithAppKeyOnly();
   const response = await request(app).get('/api/report');
 
-  assert.equal(response.status, 400);
-  assert.match(response.body.message, /entityTypeId/);
+  assert.equal(response.status, 401);
+  assert.match(response.body.message, /X-Vibe-Authorization/);
 });
 
 test('GET / returns compact preview report shell', async () => {

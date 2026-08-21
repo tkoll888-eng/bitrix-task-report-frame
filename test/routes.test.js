@@ -8,12 +8,23 @@ test('GET /api/report validates context', async () => {
   const app = express();
   app.use('/api/report', createReportRouter({ reportService: {} }));
 
-  const response = await request(app).get('/api/report');
+  const response = await request(app)
+    .get('/api/report')
+    .set('X-Vibe-Authorization', 'Bearer vibe_session_test');
   assert.equal(response.status, 400);
   assert.match(response.body.message, /entityTypeId/);
 });
 
-test('GET /api/report returns report JSON', async () => {
+test('GET /api/report requires embedded VibeCode authorization by default', async () => {
+  const app = express();
+  app.use('/api/report', createReportRouter({ reportService: {} }));
+
+  const response = await request(app).get('/api/report?entityTypeId=184&itemId=123');
+  assert.equal(response.status, 401);
+  assert.match(response.body.message, /X-Vibe-Authorization/);
+});
+
+test('GET /api/report returns report JSON with embedded authorization', async () => {
   const app = express();
   const report = { header: {}, rows: [], totals: {} };
   app.use('/api/report', createReportRouter({
@@ -21,6 +32,26 @@ test('GET /api/report returns report JSON', async () => {
       async buildReport(params) {
         assert.equal(params.entityTypeId, '184');
         assert.equal(params.itemId, '123');
+        return report;
+      },
+    },
+  }));
+
+  const response = await request(app)
+    .get('/api/report?entityTypeId=184&itemId=123')
+    .set('X-Vibe-Authorization', 'Bearer vibe_session_test');
+  assert.equal(response.status, 200);
+  assert.deepEqual(response.body, { success: true, data: report });
+});
+
+test('GET /api/report allows explicit local diagnostics without embedded authorization', async () => {
+  const app = express();
+  const report = { header: {}, rows: [], totals: {} };
+  app.use('/api/report', createReportRouter({
+    requireAuthorization: false,
+    reportService: {
+      async buildReport(params) {
+        assert.equal(params.authorization, '');
         return report;
       },
     },

@@ -14,9 +14,12 @@ function readPositiveInteger(value, fallback) {
 function readConfig(env = process.env) {
   const vibecodeAppKey = String(env.VIBECODE_APP_KEY || '').trim();
   const vibecodePersonalApiKey = String(env.VIBECODE_API_KEY || '').trim();
-  const vibecodeApiKey = vibecodePersonalApiKey || vibecodeAppKey;
+  const allowPersonalApiKey = String(env.VIBECODE_ALLOW_PERSONAL_API_KEY || '').trim().toLowerCase() === 'true';
+  const vibecodeApiKey = allowPersonalApiKey
+    ? (vibecodePersonalApiKey || vibecodeAppKey)
+    : vibecodeAppKey;
   if (!vibecodeApiKey) {
-    throw new Error('VIBECODE_APP_KEY or VIBECODE_API_KEY is required');
+    throw new Error('VIBECODE_APP_KEY is required; set VIBECODE_ALLOW_PERSONAL_API_KEY=true to use VIBECODE_API_KEY for local diagnostics');
   }
 
   return {
@@ -24,6 +27,7 @@ function readConfig(env = process.env) {
     vibecodeApiKey,
     vibecodeAppKey,
     vibecodePersonalApiKey,
+    allowPersonalApiKey,
     vibecodeApiBase: String(env.VIBECODE_API_BASE || 'https://vibecode.bitrix24.tech/v1').trim(),
     taskPositionFieldName: String(env.TASK_POSITION_FIELD_NAME || 'Наименование позиции').trim(),
     taskPositionFieldCode: String(env.TASK_POSITION_FIELD_CODE || '').trim(),

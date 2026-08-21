@@ -1,10 +1,18 @@
 const express = require('express');
 
-function createReportRouter({ reportService }) {
+function createReportRouter({ reportService, requireAuthorization = true }) {
   const router = express.Router();
 
   router.get('/', async (req, res) => {
     try {
+      const authorization = req.get('X-Vibe-Authorization') || '';
+      if (requireAuthorization && !authorization) {
+        return res.status(401).json({
+          success: false,
+          message: 'X-Vibe-Authorization is required',
+        });
+      }
+
       const { entityTypeId, itemId, ...filters } = req.query;
       if (!entityTypeId || !itemId) {
         return res.status(400).json({
@@ -17,7 +25,7 @@ function createReportRouter({ reportService }) {
         entityTypeId,
         itemId,
         filters,
-        authorization: req.get('X-Vibe-Authorization') || '',
+        authorization,
       });
       return res.json({ success: true, data: report });
     } catch (error) {

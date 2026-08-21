@@ -61,7 +61,7 @@ function formatPrintCompletionText(filters) {
   return `${filters.completionFrom || '...'} - ${filters.completionTo || '...'}`;
 }
 
-function createReportService({ client, config }) {
+function createReportService({ client, config, now = () => new Date() }) {
   async function resolvePositionFieldCode(requestOptions = {}) {
     if (config.taskPositionFieldCode) {
       return config.taskPositionFieldCode;
@@ -72,7 +72,7 @@ function createReportService({ client, config }) {
   }
 
   async function buildReport({ entityTypeId, itemId, filters: rawFilters, authorization }) {
-    const filters = normalizeFilters(rawFilters);
+    const filters = normalizeFilters(rawFilters, now());
     const requestOptions = authorization ? { authorization } : {};
     const [item, positionFieldCode] = await Promise.all([
       client.getItem(Number(entityTypeId), Number(itemId), requestOptions),

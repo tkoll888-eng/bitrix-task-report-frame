@@ -7,8 +7,12 @@ test('deploy script sends app key env and deploys through VibeCode infra endpoin
   const script = fs.readFileSync(path.join(__dirname, '..', 'scripts', 'deploy-vibecode.ps1'), 'utf8');
 
   assert.match(script, /infra\/servers\/\$ServerId\/deploy/);
-  assert.match(script, /VIBECODE_APP_KEY\s*=\s*\$ApiKey/);
-  assert.match(script, /VIBECODE_API_KEY\s*=\s*\$ApiKey/);
+  assert.match(script, /'X-Api-Key'\s*=\s*\$DeployApiKey/);
+  assert.match(script, /VIBECODE_APP_KEY\s*=\s*\$AppKey/);
+  assert.doesNotMatch(script, /VIBECODE_API_KEY\s*=\s*\$DeployApiKey/);
+  assert.doesNotMatch(script, /VIBECODE_API_KEY\s*=\s*\$ApiKey/);
+  assert.match(script, /\$IncludePersonalDiagnosticsKey/);
+  assert.match(script, /VIBECODE_ALLOW_PERSONAL_API_KEY\s*=\s*'true'/);
   assert.match(script, /\[System\.Text\.Encoding\]::UTF8\.GetBytes\(\$bodyJson\)/);
   assert.match(script, /-ContentType 'application\/json'/);
   assert.match(script, /node server\.js/);

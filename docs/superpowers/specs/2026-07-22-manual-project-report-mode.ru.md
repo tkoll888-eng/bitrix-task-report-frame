@@ -63,6 +63,10 @@ itemId=<введенный ID проекта>
 
 ## Backend
 
+Security correction: in deployed Bitrix24 frame/server mode, `/api/report` requires `X-Vibe-Authorization: Bearer vibe_session_...` before it accepts any `entityTypeId` or `itemId`, including a manually entered project ID. The backend forwards that session with `VIBECODE_APP_KEY`, so VibeCode/Bitrix24 validates the current employee's access to the smart-process item. Requests without that session return `401`; unauthenticated direct Black Hole URL checks are not a supported production path.
+
+The only exception is explicit local diagnostics with `VIBECODE_ALLOW_PERSONAL_API_KEY=true`, where the route may run without `X-Vibe-Authorization` and use `VIBECODE_API_KEY`. This mode must not be enabled in production.
+
 Маршрут `/api/report` остается основным контрактом и по-прежнему требует `entityTypeId` и `itemId`.
 
 Ручной режим реализуется на frontend: если контекст отсутствует, frontend подставляет фиксированный `entityTypeId=184` и отправляет введенный пользователем `itemId`.
@@ -122,6 +126,8 @@ http://localhost:<port>/?entityTypeId=184&itemId=<id>
 - отсутствие `itemId` переводит frontend в ручной режим;
 - query для ручного режима строится с `entityTypeId=184` и введенным `itemId`;
 - без введенного `itemId` frontend не должен вызывать `/api/report`;
+- deployed `/api/report` отклоняет запросы без `X-Vibe-Authorization` со статусом `401`;
+- явная локальная диагностика может обходить требование session только при `VIBECODE_ALLOW_PERSONAL_API_KEY=true`;
 - основной HTML содержит элементы ручного режима;
 - preview/demo-строки больше не используются как fallback для отсутствующего контекста;
 - `/api/report` продолжает валидировать обязательные `entityTypeId` и `itemId`.
