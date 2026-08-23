@@ -53,4 +53,14 @@ $bodyJson = @{
 } | ConvertTo-Json -Depth 10
 $bodyBytes = [System.Text.Encoding]::UTF8.GetBytes($bodyJson)
 
-Invoke-RestMethod -Uri "https://vibecode.bitrix24.tech/v1/infra/servers/$ServerId/deploy" -Headers $headers -ContentType 'application/json' -Method Post -Body $bodyBytes
+$response = Invoke-RestMethod -Uri "https://vibecode.bitrix24.tech/v1/infra/servers/$ServerId/deploy" -Headers $headers -ContentType 'application/json' -Method Post -Body $bodyBytes
+if ($response.success -eq $false) {
+  $message = $response.error.message
+  if ([string]::IsNullOrWhiteSpace($message)) {
+    $message = 'VibeCode deploy failed'
+  }
+
+  throw $message
+}
+
+$response
