@@ -122,6 +122,59 @@ test('buildReport loads item, company, tasks, rows and totals', async () => {
   assert.equal(report.totals.plannedText, '1:00');
 });
 
+test('buildReport keeps available tags from unfiltered project rows', async () => {
+  const client = {
+    async getItem() {
+      return { id: 123, title: 'Object' };
+    },
+    async getTaskFields() {
+      return [];
+    },
+    async searchTasks() {
+      return [
+        {
+          id: 10,
+          title: 'Setup task',
+          status: 3,
+          createdDate: '2026-06-03T10:00:00+02:00',
+          changedDate: '2026-06-03T10:00:00+02:00',
+          tags: 'Setup',
+        },
+        {
+          id: 11,
+          title: 'Dev task',
+          status: 3,
+          createdDate: '2026-06-03T10:00:00+02:00',
+          changedDate: '2026-06-03T10:00:00+02:00',
+          tags: 'Dev',
+        },
+      ];
+    },
+  };
+
+  const service = createReportService({
+    client,
+    config: {
+      taskPositionFieldName: 'Position',
+      taskPositionFieldCode: '',
+      publicPortalHost: 'solution24.bitrix24.ru',
+    },
+  });
+
+  const report = await service.buildReport({
+    entityTypeId: 184,
+    itemId: 123,
+    filters: {
+      periodPreset: 'allTime',
+      completionPreset: 'allTime',
+      tags: ['Setup'],
+    },
+  });
+
+  assert.deepEqual(report.rows.map((row) => row.id), [10]);
+  assert.deepEqual(report.meta.availableTags, ['Dev', 'Setup']);
+});
+
 test('buildReport formats completion month for print period text', async () => {
   const client = {
     async getItem() {

@@ -148,6 +148,8 @@ Frame должен использовать всю доступную высот
 
 ### Теги
 
+Correction: tag suggestions must come from the full task set loaded for the current project before tag filtering is applied. Selecting one tag must not remove other project tags from the picker, because the filter supports selecting multiple tags with OR logic.
+
 Фильтр `Теги` работает как комбинированный подбор тегов с логикой `ИЛИ`.
 
 Пользователь может:

@@ -298,6 +298,10 @@
   }
 
   function collectAvailableTags(report) {
+    if (Array.isArray(report.meta && report.meta.availableTags)) {
+      return normalizeTagSet(report.meta.availableTags);
+    }
+
     const allTags = [];
     (report.rows || []).forEach(function (row) {
       (row.tags || []).forEach(function (tag) {

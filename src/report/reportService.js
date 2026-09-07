@@ -61,6 +61,28 @@ function formatPrintCompletionText(filters) {
   return `${filters.completionFrom || '...'} - ${filters.completionTo || '...'}`;
 }
 
+function collectAvailableTags(rows) {
+  const firstByKey = new Map();
+
+  rows.forEach((row) => {
+    (row.tags || []).forEach((tag) => {
+      const trimmed = String(tag || '').trim();
+      if (!trimmed) {
+        return;
+      }
+
+      const key = trimmed.toLowerCase();
+      if (!firstByKey.has(key)) {
+        firstByKey.set(key, trimmed);
+      }
+    });
+  });
+
+  return Array.from(firstByKey.entries())
+    .sort((left, right) => left[0].localeCompare(right[0]))
+    .map((entry) => entry[1]);
+}
+
 function createReportService({ client, config, now = () => new Date() }) {
   async function resolvePositionFieldCode(requestOptions = {}) {
     if (config.taskPositionFieldCode) {
@@ -109,6 +131,7 @@ function createReportService({ client, config, now = () => new Date() }) {
       totals: calculateTotals(filteredRows),
       meta: {
         positionFieldCode,
+        availableTags: collectAvailableTags(rows),
       },
     };
   }
@@ -116,4 +139,9 @@ function createReportService({ client, config, now = () => new Date() }) {
   return { buildReport };
 }
 
-module.exports = { createReportService, createTaskSearchBody, buildCompanyReportName };
+module.exports = {
+  createReportService,
+  createTaskSearchBody,
+  buildCompanyReportName,
+  collectAvailableTags,
+};
