@@ -1,7 +1,6 @@
 ﻿(function () {
   const STORAGE_KEY = 'taskReportSavedTagSets';
   const QUICK_TAG_SET_LIMIT = 5;
-  const SUGGESTION_LIMIT = 8;
   const PAGE_SIZE_OPTIONS = [20, 30, 50];
   const FRAME_RESIZE_RETRY_LIMIT = 20;
   const FRAME_RESIZE_PADDING = 32;
@@ -11,6 +10,7 @@
     context: readContext(),
     report: null,
     selectedTags: [],
+    pendingTags: [],
     availableTags: [],
     savedTagSets: readSavedTagSets(),
     isTagFilterOpen: false,
@@ -262,6 +262,23 @@
 
       return normalized.includes(needle);
     });
+  }
+
+  function formatSelectedTagsSummary(tags) {
+    const normalizedTags = cleanTagSet(tags);
+
+    if (normalizedTags.length === 0) {
+      return 'Любой тег';
+    }
+
+    if (normalizedTags.length === 1) {
+      return normalizedTags[0];
+    }
+
+    const visibleTags = normalizedTags.slice(0, 3).join(', ');
+    const hiddenCount = normalizedTags.length - 3;
+    const suffix = hiddenCount > 0 ? ` +${hiddenCount}` : '';
+    return `${normalizedTags.length} тега: ${visibleTags}${suffix}`;
   }
 
   function readSavedTagSets() {
@@ -760,65 +777,75 @@
     return button;
   }
 
-  function renderSelectedTags() {
-    const root = document.getElementById('selectedTags');
+  function renderTagSummary() {
+    const summary = document.getElementById('tagSummary');
+    if (!summary) {
+      return;
+    }
+
+    summary.textContent = formatSelectedTagsSummary(state.selectedTags);
+    summary.title = state.selectedTags.length > 0 ? state.selectedTags.join(', ') : '';
+  }
+
+  function getVisibleTagOptions() {
+    const input = document.getElementById('tagSearch');
+    const needle = String(input ? input.value : '').trim().toLowerCase();
+    const tags = normalizeTagSet(state.availableTags.concat(state.pendingTags));
+
+    if (!needle) {
+      return tags;
+    }
+
+    return tags.filter(function (tag) {
+      return tag.toLowerCase().includes(needle);
+    });
+  }
+
+  function renderTagOptions() {
+    const root = document.getElementById('tagOptions');
     if (!root) {
       return;
     }
 
+    const options = getVisibleTagOptions();
+    const selected = new Set(cleanTagSet(state.pendingTags).map(function (tag) {
+      return tag.toLowerCase();
+    }));
+
     root.innerHTML = '';
-    state.selectedTags.forEach(function (tag) {
-      const chip = document.createElement('button');
-      chip.type = 'button';
-      chip.className = 'tag-chip tag-chip-selected';
-      chip.title = `Убрать тег ${tag}`;
-      chip.addEventListener('click', function () {
-        removeSelectedTag(tag);
+
+    if (!state.isTagFilterOpen) {
+      return;
+    }
+
+    if (options.length === 0) {
+      const empty = document.createElement('div');
+      empty.className = 'tag-empty';
+      empty.textContent = 'Теги не найдены';
+      root.appendChild(empty);
+      return;
+    }
+
+    options.forEach(function (tag) {
+      const option = document.createElement('label');
+      option.className = 'tag-option';
+
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.name = 'tagFilter';
+      checkbox.value = tag;
+      checkbox.checked = selected.has(tag.toLowerCase());
+      checkbox.addEventListener('change', function () {
+        setPendingTag(tag, checkbox.checked);
       });
 
       const text = document.createElement('span');
       text.textContent = tag;
-      chip.appendChild(text);
 
-      const remove = document.createElement('span');
-      remove.className = 'tag-chip-remove';
-      remove.textContent = '×';
-      chip.appendChild(remove);
-
-      root.appendChild(chip);
+      option.appendChild(checkbox);
+      option.appendChild(text);
+      root.appendChild(option);
     });
-  }
-
-  function getTagSuggestions() {
-    const input = document.getElementById('tagSearch');
-    return filterAvailableTags(
-      state.availableTags,
-      state.selectedTags,
-      input ? input.value : '',
-    ).slice(0, SUGGESTION_LIMIT);
-  }
-
-  function renderTagSuggestions() {
-    const root = document.getElementById('tagSuggestions');
-    if (!root) {
-      return;
-    }
-
-    const suggestions = getTagSuggestions();
-    root.innerHTML = '';
-
-    if (!state.isTagFilterOpen || suggestions.length === 0) {
-      root.hidden = true;
-      return;
-    }
-
-    suggestions.forEach(function (tag) {
-      root.appendChild(createActionChip(tag, 'tag-chip tag-chip-suggestion', function () {
-        addSelectedTag(tag);
-      }));
-    });
-
-    root.hidden = false;
   }
 
   function formatTagSetLabel(tagSet) {
@@ -868,18 +895,30 @@
   }
 
   function renderTagFilter() {
-    renderSelectedTags();
-    renderTagSuggestions();
+    renderTagSummary();
+    renderTagOptions();
     renderSavedTagSets();
   }
 
   function openTagFilter() {
+    if (!state.isTagFilterOpen) {
+      state.pendingTags = state.selectedTags.slice();
+    }
+
     state.isTagFilterOpen = true;
+    const picker = document.getElementById('tagPicker');
+    if (picker) {
+      picker.open = true;
+    }
     renderTagFilter();
   }
 
   function closeTagFilter() {
     state.isTagFilterOpen = false;
+    const picker = document.getElementById('tagPicker');
+    if (picker) {
+      picker.open = false;
+    }
     renderTagFilter();
   }
 
@@ -888,34 +927,41 @@
     renderTagFilter();
   }
 
-  function addSelectedTag(tag) {
-    const nextSelected = normalizeTagSet(state.selectedTags.concat([tag]));
-    if (nextSelected.length === state.selectedTags.length) {
-      clearTagSearch();
-      renderTagFilter();
+  function setPendingTag(tag, isSelected) {
+    const normalizedTag = String(tag || '').trim();
+    if (!normalizedTag) {
       return;
     }
 
-    state.selectedTags = nextSelected;
-    clearTagSearch();
-    state.isTagFilterOpen = true;
+    if (isSelected) {
+      state.pendingTags = normalizeTagSet(state.pendingTags.concat([normalizedTag]));
+    } else {
+      state.pendingTags = state.pendingTags.filter(function (selectedTag) {
+        return selectedTag.toLowerCase() !== normalizedTag.toLowerCase();
+      });
+    }
+
     renderTagFilter();
-    loadReportFromFirstPage();
   }
 
-  function removeSelectedTag(tag) {
-    state.selectedTags = state.selectedTags.filter(function (selectedTag) {
-      return selectedTag.toLowerCase() !== String(tag).toLowerCase();
-    });
+  function clearPendingTags() {
+    state.pendingTags = [];
+    clearTagSearch();
     renderTagFilter();
+  }
+
+  function applyPendingTags() {
+    state.selectedTags = normalizeTagSet(state.pendingTags);
+    clearTagSearch();
+    closeTagFilter();
     loadReportFromFirstPage();
   }
 
   function applySavedTagSet(tagSet) {
     state.selectedTags = cleanTagSet(tagSet);
+    state.pendingTags = state.selectedTags.slice();
     clearTagSearch();
-    state.isTagFilterOpen = false;
-    renderTagFilter();
+    closeTagFilter();
     loadReportFromFirstPage();
   }
 
@@ -1063,23 +1109,39 @@
   function bindTagFilter() {
     const input = document.getElementById('tagSearch');
     const filter = document.getElementById('tagFilter');
-    const picker = document.getElementById('savedTagSetsPicker');
+    const tagPicker = document.getElementById('tagPicker');
+    const applyButton = document.getElementById('applyTagFilter');
+    const clearButton = document.getElementById('clearTagFilter');
+    const savedPicker = document.getElementById('savedTagSetsPicker');
 
-    if (!input || !filter) {
+    if (!input || !filter || !tagPicker || !applyButton || !clearButton) {
       return;
     }
 
+    tagPicker.addEventListener('toggle', function () {
+      if (tagPicker.open) {
+        openTagFilter();
+      } else {
+        state.isTagFilterOpen = false;
+        renderTagFilter();
+      }
+    });
+
     input.addEventListener('input', function () {
       openTagFilter();
-      renderTagSuggestions();
+      renderTagOptions();
     });
 
     input.addEventListener('focus', function () {
       openTagFilter();
     });
 
-    filter.addEventListener('click', function () {
-      openTagFilter();
+    applyButton.addEventListener('click', function () {
+      applyPendingTags();
+    });
+
+    clearButton.addEventListener('click', function () {
+      clearPendingTags();
     });
 
     input.addEventListener('keydown', function (event) {
@@ -1092,22 +1154,23 @@
 
       if (event.key === 'Enter') {
         event.preventDefault();
-        const suggestions = getTagSuggestions();
+        const options = getVisibleTagOptions();
         const typedValue = String(input.value || '').trim();
 
-        if (suggestions.length > 0) {
-          addSelectedTag(suggestions[0]);
+        if (options.length > 0) {
+          setPendingTag(options[0], true);
           return;
         }
 
         if (typedValue) {
-          addSelectedTag(typedValue);
+          setPendingTag(typedValue, true);
         }
         return;
       }
 
-      if (event.key === 'Backspace' && !input.value && state.selectedTags.length > 0) {
-        removeSelectedTag(state.selectedTags[state.selectedTags.length - 1]);
+      if (event.key === 'Backspace' && !input.value && state.pendingTags.length > 0) {
+        state.pendingTags = state.pendingTags.slice(0, -1);
+        renderTagFilter();
       }
     });
 
@@ -1116,8 +1179,8 @@
         closeTagFilter();
       }
 
-      if (picker && picker.open && !picker.contains(event.target)) {
-        picker.open = false;
+      if (savedPicker && savedPicker.open && !savedPicker.contains(event.target)) {
+        savedPicker.open = false;
       }
     });
   }

@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Task Report Preview</title>
-    <link rel="stylesheet" href="/styles.css?v=20260616-01">
+    <link rel="stylesheet" href="/styles.css?v=20260907-tags-01">
   </head>
   <body>
     <main class="page">
@@ -39,24 +39,32 @@
               </div>
             </div>
 
-            <label class="filter-field filter-field-tags">
+            <div class="filter-field filter-field-tags">
               <span>Теги</span>
               <div id="tagFilter" class="tag-filter">
-                <div class="tag-input tag-picker-input">
-                  <span class="tag-input-icon">#</span>
-                  <div id="selectedTags" class="tag-selection"></div>
-                  <input id="tagSearch" type="text" placeholder="Любой тег" autocomplete="off">
-                </div>
-                <div id="tagSuggestions" class="tag-suggestions" hidden></div>
-                <div id="savedTagSets" class="tag-sets" hidden>
-                  <div id="savedTagSetsQuick" class="tag-sets-quick"></div>
-                  <details id="savedTagSetsPicker" class="tag-sets-picker">
-                    <summary class="tag-sets-summary">Все наборы</summary>
-                    <div id="savedTagSetsMenu" class="tag-sets-menu"></div>
-                  </details>
-                </div>
+                <details id="tagPicker" class="tag-picker">
+                  <summary id="tagSummary" class="tag-picker-summary">Любой тег</summary>
+                  <div class="tag-picker-menu">
+                    <div class="tag-search-row">
+                      <span class="tag-input-icon">#</span>
+                      <input id="tagSearch" type="text" placeholder="Найти тег" autocomplete="off">
+                    </div>
+                    <div id="tagOptions" class="tag-options"></div>
+                    <div id="savedTagSets" class="tag-sets" hidden>
+                      <div id="savedTagSetsQuick" class="tag-sets-quick"></div>
+                      <details id="savedTagSetsPicker" class="tag-sets-picker">
+                        <summary class="tag-sets-summary">Все наборы</summary>
+                        <div id="savedTagSetsMenu" class="tag-sets-menu"></div>
+                      </details>
+                    </div>
+                    <div class="tag-picker-actions">
+                      <button id="clearTagFilter" type="button" class="tag-action-button">Сбросить</button>
+                      <button id="applyTagFilter" type="button" class="tag-action-button tag-action-primary">ОК</button>
+                    </div>
+                  </div>
+                </details>
               </div>
-            </label>
+            </div>
 
             <div class="filter-group" data-filter-group="completion">
               <label class="filter-field">
@@ -187,7 +195,7 @@
     </main>
 
     <script src="https://api.bitrix24.com/api/v1/" async></script>
-    <script src="/app.js?v=20260616-01"></script>
+    <script src="/app.js?v=20260907-tags-01"></script>
   </body>
 </html>
 

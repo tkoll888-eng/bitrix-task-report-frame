@@ -150,6 +150,8 @@ Frame должен использовать всю доступную высот
 
 Correction: tag suggestions must come from the full task set loaded for the current project before tag filtering is applied. Selecting one tag must not remove other project tags from the picker, because the filter supports selecting multiple tags with OR logic.
 
+Correction: the tag filter UI must show a readable applied summary in the collapsed field. Opening the field shows a searchable checkbox list of project tags, plus saved tag sets, with explicit OK and reset actions. Checkbox changes are pending until OK is pressed; after OK the selected set is applied and saved as a reusable preset.
+
 Фильтр `Теги` работает как комбинированный подбор тегов с логикой `ИЛИ`.
 
 Пользователь может:

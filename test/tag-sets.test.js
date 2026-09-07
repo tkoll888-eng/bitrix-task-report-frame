@@ -4,6 +4,7 @@ const {
   normalizeTagSet,
   mergeSavedTagSet,
   filterAvailableTags,
+  formatSelectedTagsSummary,
 } = require('../src/frontend/tagSets');
 
 test('normalizeTagSet removes duplicates, trims values, and ignores order', () => {
@@ -37,5 +38,18 @@ test('filterAvailableTags finds tags by partial text and excludes already select
       'dev',
     ),
     ['DevOps'],
+  );
+});
+
+test('formatSelectedTagsSummary shows readable selected tags', () => {
+  assert.equal(formatSelectedTagsSummary([]), 'Любой тег');
+  assert.equal(formatSelectedTagsSummary(['Настройка']), 'Настройка');
+  assert.equal(
+    formatSelectedTagsSummary(['Настройка', 'Согласование']),
+    '2 тега: Настройка, Согласование',
+  );
+  assert.equal(
+    formatSelectedTagsSummary(['Настройка', 'Согласование', 'Документы', 'Запуск']),
+    '4 тега: Настройка, Согласование, Документы +1',
   );
 });

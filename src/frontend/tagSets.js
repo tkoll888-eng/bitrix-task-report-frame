@@ -82,8 +82,26 @@ function filterAvailableTags(availableTags, selectedTags, query) {
   });
 }
 
+function formatSelectedTagsSummary(tags) {
+  const normalizedTags = cleanTagSet(tags);
+
+  if (normalizedTags.length === 0) {
+    return 'Любой тег';
+  }
+
+  if (normalizedTags.length === 1) {
+    return normalizedTags[0];
+  }
+
+  const visibleTags = normalizedTags.slice(0, 3).join(', ');
+  const hiddenCount = normalizedTags.length - 3;
+  const suffix = hiddenCount > 0 ? ` +${hiddenCount}` : '';
+  return `${normalizedTags.length} тега: ${visibleTags}${suffix}`;
+}
+
 module.exports = {
   normalizeTagSet,
   mergeSavedTagSet,
   filterAvailableTags,
+  formatSelectedTagsSummary,
 };

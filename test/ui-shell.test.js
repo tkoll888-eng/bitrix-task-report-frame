@@ -60,10 +60,13 @@ test('GET / returns compact preview report shell', async () => {
   assert.doesNotMatch(response.text, /data-range-summary="period"/);
   assert.doesNotMatch(response.text, /data-range-summary="completion"/);
   assert.match(response.text, />Теги</);
-  assert.match(response.text, /id="selectedTags"/);
+  assert.match(response.text, /id="tagPicker"/);
+  assert.match(response.text, /id="tagSummary"/);
+  assert.match(response.text, /id="tagOptions"/);
+  assert.match(response.text, /id="applyTagFilter"/);
+  assert.match(response.text, /id="clearTagFilter"/);
   assert.match(response.text, /id="tagSearch"/);
   assert.match(response.text, /id="savedTagSetsQuick"/);
-  assert.match(response.text, /id="tagSuggestions" class="tag-suggestions" hidden/);
   assert.match(response.text, /id="savedTagSets" class="tag-sets" hidden/);
   assert.match(response.text, /id="refreshReportButton"/);
   assert.match(response.text, /id="statusPicker"/);
