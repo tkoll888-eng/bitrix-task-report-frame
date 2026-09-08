@@ -709,11 +709,10 @@
         return;
       }
 
-      editor.hidden = !editor.hidden;
-      if (!editor.hidden) {
-        input.focus();
-        input.select();
-      }
+      wrap.classList.add('is-editing');
+      editor.hidden = false;
+      input.focus();
+      input.select();
     });
 
     saveButton.addEventListener('click', function () {
@@ -722,6 +721,7 @@
 
     cancelButton.addEventListener('click', function () {
       input.value = String(row.plannedText || '0:00');
+      wrap.classList.remove('is-editing');
       editor.hidden = true;
     });
 
@@ -734,6 +734,7 @@
       if (event.key === 'Escape') {
         event.preventDefault();
         input.value = String(row.plannedText || '0:00');
+        wrap.classList.remove('is-editing');
         editor.hidden = true;
       }
     });

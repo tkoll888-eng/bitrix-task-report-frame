@@ -608,28 +608,40 @@ td {
 }
 
 .planned-time-control {
-  position: relative;
-  display: inline-flex;
+  display: flex;
   justify-content: flex-end;
-  min-width: 62px;
+  min-width: 96px;
 }
 
 .planned-time-button {
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  gap: 5px;
-  min-height: 24px;
-  border: 0;
-  padding: 0;
-  background: transparent;
+  justify-content: flex-end;
+  gap: 6px;
+  width: 100%;
+  min-height: 28px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  padding: 2px 6px;
+  background: #ffffff;
   color: inherit;
   font: inherit;
   cursor: pointer;
 }
 
+.planned-time-button:hover,
+.planned-time-button:focus {
+  border-color: #c4d2e3;
+  background: #f8fbff;
+}
+
 .planned-time-button:disabled {
   cursor: wait;
   opacity: 0.55;
+}
+
+.planned-time-control.is-editing .planned-time-button {
+  display: none;
 }
 
 .planned-time-arrow {
@@ -641,18 +653,11 @@ td {
 }
 
 .planned-time-editor {
-  position: absolute;
-  top: calc(100% + 4px);
-  right: 0;
-  z-index: 30;
   display: flex;
   gap: 4px;
   align-items: center;
-  border: 1px solid #c4d2e3;
-  border-radius: 4px;
-  padding: 6px;
-  background: #ffffff;
-  box-shadow: 0 10px 24px rgba(37, 72, 112, 0.12);
+  justify-content: flex-end;
+  width: 100%;
 }
 
 .planned-time-editor[hidden] {
@@ -660,7 +665,7 @@ td {
 }
 
 .planned-time-editor input {
-  width: 72px;
+  width: 70px;
   min-height: 28px;
   text-align: right;
 }
