@@ -1,7 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { TASK_STATUSES, getStatusLabel, parseStatusList } = require('../src/report/statuses');
-const { formatSeconds, sumSeconds } = require('../src/report/time');
+const { formatSeconds, parseHoursMinutesToSeconds, sumSeconds } = require('../src/report/time');
 const { getCurrentMonthRange, getCompletionRange } = require('../src/report/dateRanges');
 
 test('status labels match Bitrix24 interface names', () => {
@@ -25,6 +25,16 @@ test('time helpers format seconds as H:MM', () => {
   assert.equal(formatSeconds(900), '0:15');
   assert.equal(formatSeconds(5850), '1:37');
   assert.equal(sumSeconds([{ value: 60 }, { value: 120 }], 'value'), 180);
+});
+
+test('parseHoursMinutesToSeconds accepts Bitrix-like hours and minutes input', () => {
+  assert.equal(parseHoursMinutesToSeconds('0:00'), 0);
+  assert.equal(parseHoursMinutesToSeconds('1:30'), 5400);
+  assert.equal(parseHoursMinutesToSeconds('2 05'), 7500);
+  assert.equal(parseHoursMinutesToSeconds('3ч 15м'), 11700);
+  assert.equal(parseHoursMinutesToSeconds('45'), 2700);
+  assert.throws(() => parseHoursMinutesToSeconds('1:75'), /minutes/i);
+  assert.throws(() => parseHoursMinutesToSeconds('-1:00'), /time/i);
 });
 
 test('current month range uses local month boundaries', () => {

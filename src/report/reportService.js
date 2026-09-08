@@ -1,6 +1,7 @@
 const { findFieldCodeByTitle } = require('../vibecodeClient');
 const { normalizeFilters, applyClientFilters } = require('./filters');
 const { mapTaskToRow, calculateTotals } = require('./taskMapper');
+const { formatSeconds } = require('./time');
 
 function buildCompanyReportName(companyName) {
   return companyName ? `Отчет по сопровождению ${companyName}` : 'Отчет по сопровождению';
@@ -136,7 +137,16 @@ function createReportService({ client, config, now = () => new Date() }) {
     };
   }
 
-  return { buildReport };
+  async function updateTaskPlannedTime({ taskId, plannedSeconds, authorization }) {
+    await client.updateTask(Number(taskId), { timeEstimate: plannedSeconds }, { authorization });
+    return {
+      taskId: Number(taskId),
+      plannedSeconds,
+      plannedText: formatSeconds(plannedSeconds),
+    };
+  }
+
+  return { buildReport, updateTaskPlannedTime };
 }
 
 module.exports = {

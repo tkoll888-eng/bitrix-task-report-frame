@@ -76,6 +76,13 @@ function createVibecodeClient({ baseUrl, apiKey, appKey = '', fetchImpl = fetch 
         body,
       });
     },
+    updateTask(taskId, fields, requestOptions = {}) {
+      return requestJson(fetchImpl, baseUrl, apiKey, appKey, '/tasks/update', {
+        ...requestOptions,
+        method: 'POST',
+        body: { taskId, fields },
+      });
+    },
     getItem(entityTypeId, itemId, requestOptions = {}) {
       return requestJson(fetchImpl, baseUrl, apiKey, appKey, `/items/${entityTypeId}/${itemId}`, requestOptions);
     },

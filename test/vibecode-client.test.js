@@ -35,6 +35,39 @@ test('client sends X-Api-Key and parses successful response', async () => {
   assert.equal(calls[0].options.headers['X-Api-Key'], 'secret');
 });
 
+test('client updates task time estimate through VibeCode tasks update endpoint', async () => {
+  const calls = [];
+  const client = createVibecodeClient({
+    baseUrl: 'https://example.test/v1',
+    apiKey: 'personal-key',
+    appKey: 'app-key',
+    fetchImpl: async (url, options) => {
+      calls.push({ url, options });
+      return {
+        ok: true,
+        async json() {
+          return { success: true, data: { task: { id: 42, timeEstimate: 5400 } } };
+        },
+      };
+    },
+  });
+
+  const result = await client.updateTask(42, { timeEstimate: 5400 }, {
+    authorization: 'Bearer vibe_session_test',
+  });
+
+  assert.deepEqual(result, { task: { id: 42, timeEstimate: 5400 } });
+  assert.equal(calls[0].url, 'https://example.test/v1/tasks/update');
+  assert.equal(calls[0].options.method, 'POST');
+  assert.equal(calls[0].options.headers['X-Api-Key'], 'app-key');
+  assert.equal(calls[0].options.headers.Authorization, 'Bearer vibe_session_test');
+  assert.deepEqual(JSON.parse(calls[0].options.body), {
+    taskId: 42,
+    fields: { timeEstimate: 5400 },
+  });
+});
+
+
 test('client forwards embedded VibeCode session as Authorization header', async () => {
   const calls = [];
   const fetchImpl = async (url, options) => {

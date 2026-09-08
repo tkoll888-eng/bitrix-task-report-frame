@@ -298,15 +298,29 @@ test('print actions set pdf filename from report before printing', () => {
   assert.match(appJs, /function buildPrintDocumentTitle/);
   assert.match(appJs, /function buildPrintDocumentHtml/);
   assert.match(appJs, /function openPrintDocument/);
+  assert.match(appJs, /function getPrintableReport/);
   assert.match(appJs, /window\.open\('', '_blank'\)/);
-  assert.match(appJs, /printWindow\.document\.write\(buildPrintDocumentHtml\(state\.report\)\)/);
+  assert.match(appJs, /printWindow\.document\.write\(buildPrintDocumentHtml\(getPrintableReport\(\)\)\)/);
   assert.match(appJs, /printWindow\.print\(\)/);
   assert.match(appJs, /document\.title\s*=\s*buildPrintDocumentTitle\(report\)/);
-  assert.match(appJs, /document\.title\s*=\s*buildPrintDocumentTitle\(state\.report\)/);
+  assert.match(appJs, /document\.title\s*=\s*buildPrintDocumentTitle\(getPrintableReport\(\)\)/);
   assert.doesNotMatch(appJs, /window\.print\(\)/);
   assert.doesNotMatch(appJs, /document\.title\s*=\s*previousTitle/);
   assert.match(printJs, /function buildPrintDocumentTitle/);
   assert.match(printJs, /document\.title\s*=\s*buildPrintDocumentTitle\(report\)/);
   assert.match(printJs, /document\.title\s*=\s*buildPrintDocumentTitle\(currentReport\)/);
+});
+
+test('planned time cells expose compact editor affordance', () => {
+  const appJs = fs.readFileSync(path.join(__dirname, '..', 'public', 'app.js'), 'utf8');
+  const styles = fs.readFileSync(path.join(__dirname, '..', 'public', 'styles.css'), 'utf8');
+
+  assert.match(appJs, /function createPlannedTimeControl/);
+  assert.match(appJs, /className = 'planned-time-button'/);
+  assert.match(appJs, /className = 'planned-time-arrow'/);
+  assert.match(appJs, /patch\(`\/api\/report\/tasks\/\$\{encodeURIComponent\(row\.id\)\}\/planned-time`/);
+  assert.match(styles, /\.planned-time-button/);
+  assert.match(styles, /\.planned-time-arrow/);
+  assert.match(styles, /\.planned-time-editor/);
 });
 

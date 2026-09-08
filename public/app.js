@@ -15,6 +15,7 @@
     savedTagSets: readSavedTagSets(),
     isTagFilterOpen: false,
     isManualMode: false,
+    savingPlannedTaskId: null,
     sort: { key: 'closedDate', direction: 'desc' },
     pagination: { page: 1, pageSize: 20 },
   };
@@ -597,6 +598,149 @@
     return tag;
   }
 
+  async function patch(url, body) {
+    const response = await fetch(url, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    const payload = await response.json();
+
+    if (!response.ok || !payload.success) {
+      throw new Error(payload.message || 'Не удалось сохранить изменение.');
+    }
+
+    return payload.data;
+  }
+
+  function updateReportRowPlannedTime(taskId, update) {
+    if (!state.report || !Array.isArray(state.report.rows)) {
+      return;
+    }
+
+    const row = state.report.rows.find(function (item) {
+      return String(item.id) === String(taskId);
+    });
+
+    if (!row) {
+      return;
+    }
+
+    row.plannedSeconds = update.plannedSeconds;
+    row.plannedText = update.plannedText;
+  }
+
+  async function savePlannedTime(row, plannedText) {
+    if (state.savingPlannedTaskId !== null) {
+      return;
+    }
+
+    const taskId = row.id;
+    state.savingPlannedTaskId = String(taskId);
+    renderReport(state.report);
+    showMessage('Сохраняем плановое время...');
+
+    try {
+      const update = await patch(`/api/report/tasks/${encodeURIComponent(row.id)}/planned-time`, {
+        plannedText: String(plannedText || '').trim(),
+      });
+      updateReportRowPlannedTime(taskId, update);
+      await loadReport();
+      showMessage('');
+    } catch (error) {
+      showMessage(error.message, 'error');
+      renderReport(state.report);
+    } finally {
+      state.savingPlannedTaskId = null;
+      if (state.report) {
+        renderReport(state.report);
+      }
+      scheduleFrameResize();
+    }
+  }
+
+  function createPlannedTimeControl(row) {
+    const wrap = document.createElement('div');
+    wrap.className = 'planned-time-control';
+
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'planned-time-button';
+    button.disabled = state.savingPlannedTaskId !== null;
+
+    const value = document.createElement('span');
+    value.className = 'planned-time-value';
+    value.textContent = String(row.plannedText || '0:00');
+    button.appendChild(value);
+
+    const arrow = document.createElement('span');
+    arrow.className = 'planned-time-arrow';
+    button.appendChild(arrow);
+    wrap.appendChild(button);
+
+    const editor = document.createElement('div');
+    editor.className = 'planned-time-editor';
+    editor.hidden = true;
+
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.inputMode = 'numeric';
+    input.value = String(row.plannedText || '0:00');
+    input.setAttribute('aria-label', 'Плановое время');
+    input.disabled = state.savingPlannedTaskId !== null;
+    editor.appendChild(input);
+
+    const saveButton = document.createElement('button');
+    saveButton.type = 'button';
+    saveButton.className = 'planned-time-save';
+    saveButton.textContent = 'OK';
+    saveButton.disabled = state.savingPlannedTaskId !== null;
+    editor.appendChild(saveButton);
+
+    const cancelButton = document.createElement('button');
+    cancelButton.type = 'button';
+    cancelButton.className = 'planned-time-cancel';
+    cancelButton.textContent = '×';
+    cancelButton.disabled = state.savingPlannedTaskId !== null;
+    editor.appendChild(cancelButton);
+
+    button.addEventListener('click', function () {
+      if (state.savingPlannedTaskId !== null) {
+        return;
+      }
+
+      editor.hidden = !editor.hidden;
+      if (!editor.hidden) {
+        input.focus();
+        input.select();
+      }
+    });
+
+    saveButton.addEventListener('click', function () {
+      savePlannedTime(row, input.value);
+    });
+
+    cancelButton.addEventListener('click', function () {
+      input.value = String(row.plannedText || '0:00');
+      editor.hidden = true;
+    });
+
+    input.addEventListener('keydown', function (event) {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        savePlannedTime(row, input.value);
+      }
+
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        input.value = String(row.plannedText || '0:00');
+        editor.hidden = true;
+      }
+    });
+
+    return wrap;
+  }
+
   function appendPrintMetaLine(root, label, value) {
     const line = document.createElement('div');
     const name = document.createElement('span');
@@ -707,6 +851,17 @@
       </html>`;
   }
 
+  function getPrintableReport() {
+    if (!state.report) {
+      return null;
+    }
+
+    return {
+      ...state.report,
+      rows: getSortedRows(state.report.rows || []),
+    };
+  }
+
   function openPrintDocument() {
     const printWindow = window.open('', '_blank');
     if (!printWindow) {
@@ -715,7 +870,7 @@
     }
 
     printWindow.document.open();
-    printWindow.document.write(buildPrintDocumentHtml(state.report));
+    printWindow.document.write(buildPrintDocumentHtml(getPrintableReport()));
     printWindow.document.close();
     printWindow.setTimeout(function () {
       printWindow.focus();
@@ -725,7 +880,7 @@
 
   function printCurrentReport() {
     if (state.report) {
-      document.title = buildPrintDocumentTitle(state.report);
+      document.title = buildPrintDocumentTitle(getPrintableReport());
       openPrintDocument();
       return;
     }
@@ -1348,7 +1503,7 @@
 
       const planned = document.createElement('td');
       planned.className = 'numeric';
-      planned.textContent = row.plannedText || '0:00';
+      planned.appendChild(createPlannedTimeControl(row));
       tr.appendChild(planned);
 
       const spent = document.createElement('td');

@@ -152,6 +152,8 @@ Correction: tag suggestions must come from the full task set loaded for the curr
 
 Correction: the tag filter UI must show a readable applied summary in the collapsed field. Opening the field shows a searchable checkbox list of project tags, plus saved tag sets, with explicit OK and reset actions. Checkbox changes are pending until OK is pressed; after OK the selected set is applied and saved as a reusable preset.
 
+Correction: planned task time can be edited from the report by users who have Bitrix24 permission to edit the task. The UI accepts Bitrix-like hours/minutes input, converts it to seconds, and updates the task `timeEstimate` through the VibeCode task update endpoint using the embedded user session. While one planned-time update is waiting for Bitrix24 confirmation, all planned-time editors stay disabled. The print document must use the same sorted task order currently shown in the report UI.
+
 Фильтр `Теги` работает как комбинированный подбор тегов с логикой `ИЛИ`.
 
 Пользователь может:
