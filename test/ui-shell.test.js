@@ -318,6 +318,7 @@ test('planned time cells expose compact editor affordance', () => {
   assert.match(appJs, /function createPlannedTimeControl/);
   assert.match(appJs, /className = 'planned-time-button'/);
   assert.match(appJs, /className = 'planned-time-arrow'/);
+  assert.match(appJs, /wrap\.appendChild\(editor\)/);
   assert.match(appJs, /patch\(`\/api\/report\/tasks\/\$\{encodeURIComponent\(row\.id\)\}\/planned-time`/);
   assert.match(appJs, /wrap\.classList\.add\('is-editing'\)/);
   assert.doesNotMatch(styles, /\.planned-time-editor[\s\S]*position:\s*absolute/);

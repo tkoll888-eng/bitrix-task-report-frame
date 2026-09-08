@@ -703,6 +703,7 @@
     cancelButton.textContent = '×';
     cancelButton.disabled = state.savingPlannedTaskId !== null;
     editor.appendChild(cancelButton);
+    wrap.appendChild(editor);
 
     button.addEventListener('click', function () {
       if (state.savingPlannedTaskId !== null) {
